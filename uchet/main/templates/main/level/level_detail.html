@@ -1,0 +1,16 @@
+{% extends 'main/base_dashboard.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>Уровень: {{ level.caption }}</h2>
+    <p><strong>Поле:</strong> <a href="{% url 'field_detail' level.field.pk %}">{{ level.field.caption }}</a></p>
+    <p><strong>Коэффициент:</strong> {{ level.ratio }}</p>
+    <p><strong>Критерий:</strong> <a href="{% url 'criterion_detail' level.field.criterion.pk %}">{{ level.field.criterion.name }}</a></p>
+    <p><strong>Работа:</strong> <a href="{% url 'work_detail' level.field.criterion.work.pk %}">{{ level.field.criterion.work.name }}</a></p>
+
+    <hr>
+    <a href="{% url 'level_update' level.pk %}" class="btn btn-warning">Редактировать уровень</a>
+    <a href="{% url 'level_delete' level.pk %}" class="btn btn-danger">Удалить уровень</a>
+    <a href="{% url 'level_list' %}" class="btn btn-secondary">Назад к списку</a>
+</div>
+{% endblock %}

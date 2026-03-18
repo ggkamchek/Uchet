@@ -1,0 +1,80 @@
+{% extends 'main/teacher/teacher_base.html' %}
+
+{% block content %}
+<h2>Добавить достижение</h2>
+<form id="achievement-form" method="post" enctype="multipart/form-data" action="{% url 'teacher_achievement_save' %}">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="work" class="form-label">Работа</label>
+        <select name="work" id="work" class="form-control" required>
+            <option value="">-- Выберите работу --</option>
+            {% for work in works %}
+            <option value="{{ work.id }}">{{ work.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label for="criterion" class="form-label">Критерий</label>
+        <select name="criterion" id="criterion" class="form-control" required disabled>
+            <option value="">-- Сначала выберите работу --</option>
+        </select>
+    </div>
+
+    <div id="fields-container" class="mb-3">
+        <!-- Сюда будут загружаться поля критерия -->
+    </div>
+
+    <button type="submit" class="btn btn-success">Сохранить достижение</button>
+    <a href="{% url 'teacher_dashboard' %}" class="btn btn-secondary">Отмена</a>
+</form>
+
+<script>
+    const workSelect = document.getElementById('work');
+    const criterionSelect = document.getElementById('criterion');
+    const fieldsContainer = document.getElementById('fields-container');
+
+    workSelect.addEventListener('change', function() {
+        const workId = this.value;
+        if (!workId) {
+            criterionSelect.disabled = true;
+            criterionSelect.innerHTML = '<option value="">-- Сначала выберите работу --</option>';
+            fieldsContainer.innerHTML = '';
+            return;
+        }
+
+        fetch(`{% url 'get_criteria_json' 0 %}`.replace('0', workId))
+            .then(response => response.json())
+            .then(data => {
+                criterionSelect.disabled = false;
+                criterionSelect.innerHTML = '<option value="">-- Выберите критерий --</option>';
+                data.forEach(criterion => {
+                    const option = document.createElement('option');
+                    option.value = criterion.id;
+                    option.textContent = criterion.name;
+                    criterionSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Ошибка загрузки критериев:', error);
+            });
+    });
+
+    criterionSelect.addEventListener('change', function() {
+        const criterionId = this.value;
+        if (!criterionId) {
+            fieldsContainer.innerHTML = '';
+            return;
+        }
+
+        fetch(`{% url 'get_fields_html' 0 %}`.replace('0', criterionId))
+            .then(response => response.text())
+            .then(html => {
+                fieldsContainer.innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Ошибка загрузки полей:', error);
+            });
+    });
+</script>
+{% endblock %}

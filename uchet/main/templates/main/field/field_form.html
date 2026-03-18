@@ -1,0 +1,41 @@
+{% extends 'main/base_dashboard.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <h2 class="mb-4">{% if object %}Редактировать поле{% else %}Создать поле{% endif %}</h2>
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="{{ form.caption.id_for_label }}" class="form-label">Название поля</label>
+                {{ form.caption.errors }}
+                <input type="text" name="{{ form.caption.name }}" id="{{ form.caption.id_for_label }}" 
+                       class="form-control {% if form.caption.errors %}is-invalid{% endif %}" 
+                       value="{{ form.caption.value|default:'' }}">
+            </div>
+            <div class="mb-3">
+                <label for="{{ form.criterion.id_for_label }}" class="form-label">Критерий</label>
+                {{ form.criterion.errors }}
+                <select name="{{ form.criterion.name }}" id="{{ form.criterion.id_for_label }}" 
+                        class="form-select {% if form.criterion.errors %}is-invalid{% endif %}">
+                    {% for choice in form.criterion.field.choices %}
+                        <option value="{{ choice.0 }}" {% if form.criterion.value == choice.0 %}selected{% endif %}>{{ choice.1 }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="{{ form.type.id_for_label }}" class="form-label">Тип поля</label>
+                {{ form.type.errors }}
+                <select name="{{ form.type.name }}" id="{{ form.type.id_for_label }}" 
+                        class="form-select {% if form.type.errors %}is-invalid{% endif %}">
+                    {% for choice in form.type.field.choices %}
+                        <option value="{{ choice.0 }}" {% if form.type.value == choice.0 %}selected{% endif %}>{{ choice.1 }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <a href="{% url 'field_list' %}" class="btn btn-secondary">Отмена</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

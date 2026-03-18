@@ -1,0 +1,130 @@
+{% extends 'main/base_dashboard.html' %}
+
+{% block content %}
+<div class="row">
+    <!-- Работы -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Работы</h5>
+                <a href="{% url 'work_create' %}" class="btn btn-sm btn-primary">➕ Добавить работу</a>
+            </div>
+            <div class="card-body">
+                {% if latest_works %}
+                    <ul class="list-group">
+                        {% for work in latest_works %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <a href="{% url 'work_detail' work.pk %}">{{ work.name }}</a>
+                                <a href="{% url 'criterion_create' %}?work={{ work.pk }}" class="btn btn-sm btn-outline-success">➕ Критерий</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">Нет работ. <a href="{% url 'work_create' %}">Создайте первую</a>.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Критерии -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Критерии</h5>
+                <a href="{% url 'criterion_create' %}" class="btn btn-sm btn-primary">➕ Добавить критерий</a>
+            </div>
+            <div class="card-body">
+                {% if latest_criterions %}
+                    <ul class="list-group">
+                        {% for criterion in latest_criterions %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <a href="{% url 'criterion_detail' criterion.pk %}">{{ criterion.name }}</a>
+                                <span class="badge bg-secondary">{{ criterion.work.name }}</span>
+                                <a href="{% url 'field_create' %}?criterion={{ criterion.pk }}" class="btn btn-sm btn-outline-success">➕ Поле</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">Нет критериев.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Поля -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Поля</h5>
+                <a href="{% url 'field_create' %}" class="btn btn-sm btn-primary">➕ Добавить поле</a>
+            </div>
+            <div class="card-body">
+                {% if latest_fields %}
+                    <ul class="list-group">
+                        {% for field in latest_fields %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <a href="{% url 'field_detail' field.pk %}">{{ field.caption }}</a>
+                                <span class="badge bg-secondary">{{ field.criterion.name }}</span>
+                                <a href="{% url 'level_create' %}?field={{ field.pk }}" class="btn btn-sm btn-outline-success">➕ Уровень</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">Нет полей.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Уровни -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Уровни</h5>
+                <a href="{% url 'level_create' %}" class="btn btn-sm btn-primary">➕ Добавить уровень</a>
+            </div>
+            <div class="card-body">
+                {% if latest_levels %}
+                    <ul class="list-group">
+                        {% for level in latest_levels %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <a href="{% url 'level_detail' level.pk %}">{{ level.caption }}</a>
+                                <span class="badge bg-secondary">{{ level.field.caption }}</span>
+                                <span class="text-muted">Коэф: {{ level.ratio }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">Нет уровней.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Периоды -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Периоды</h5>
+                <a href="{% url 'period_create' %}" class="btn btn-sm btn-primary">➕ Добавить период</a>
+            </div>
+            <div class="card-body">
+                {% if latest_periods %}
+                    <ul class="list-group">
+                        {% for period in latest_periods %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <a href="{% url 'period_detail' period.pk %}">{{ period.name }}</a>
+                                <span class="badge {% if period.status %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {{ period.status|yesno:"Активен,Неактивен" }}
+                                </span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">Нет периодов.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends 'main/teacher/teacher_base.html' %}
+
+{% block content %}
+<h2>Мои достижения</h2>
+<a href="{% url 'teacher_achievement_create' %}" class="btn btn-success mb-3">➕ Добавить достижение</a>
+
+{% if achievements %}
+    <div class="accordion" id="achievementsAccordion">
+        {% for achievement in achievements %}
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="heading{{ achievement.id }}">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ achievement.id }}" aria-expanded="false" aria-controls="collapse{{ achievement.id }}">
+                    <strong>{{ achievement.time_of_addition|date:"d.m.Y H:i" }}</strong> &nbsp;—&nbsp;
+                    {{ achievement.work.name }} &nbsp;|&nbsp;
+                    Период: {{ achievement.period.name }} &nbsp;|&nbsp;
+                    Баллы: <span class="badge bg-primary">{{ achievement.total_score }}</span>
+                </button>
+            </h2>
+            <div id="collapse{{ achievement.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ achievement.id }}" data-bs-parent="#achievementsAccordion">
+                <div class="accordion-body">
+                    <p><strong>Работа:</strong> {{ achievement.work.name }}</p>
+                    <p><strong>Критерий:</strong> 
+                        {% with first_field=achievement.field_values.first %}
+                            {% if first_field %}
+                                {{ first_field.field.criterion.name }}
+                            {% else %}
+                                Не указан
+                            {% endif %}
+                        {% endwith %}
+                    </p>
+                    <h6>Поля:</h6>
+                    <ul class="list-group mb-3">
+                        {% for field_value in achievement.field_values.all %}
+                        <li class="list-group-item">
+                            <strong>{{ field_value.field.caption }}:</strong>
+                            {% if field_value.field.type == 'text' %}
+                                {{ field_value.value }}
+                            {% elif field_value.field.type == 'chooser' %}
+                                {% with level_id=field_value.value %}
+                                    {% for level in field_value.field.levels.all %}
+                                        {% if level.id|stringformat:"s" == level_id %}
+                                            {{ level.caption }} (коэф. {{ level.ratio }})
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endwith %}
+                            {% elif field_value.field.type == 'photo' %}
+                                <a href="{{ MEDIA_URL }}{{ field_value.value }}" target="_blank">Просмотреть фото</a>
+                            {% endif %}
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item">Нет заполненных полей</li>
+                        {% endfor %}
+                    </ul>
+                    <a href="{% url 'teacher_achievement_edit' achievement.pk %}" class="btn btn-warning btn-sm">Редактировать</a>
+                    <a href="{% url 'teacher_achievement_delete' achievement.pk %}" class="btn btn-danger btn-sm">Удалить</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p>У вас пока нет достижений.</p>
+{% endif %}
+{% endblock %}

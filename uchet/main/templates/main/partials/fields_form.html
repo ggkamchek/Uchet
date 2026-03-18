@@ -1,0 +1,19 @@
+{% for field in fields %}
+<div class="mb-3">
+    <label for="field_{{ field.id }}" class="form-label">{{ field.caption }}</label>
+    {% if field.type == 'text' %}
+        <input type="text" name="field_{{ field.id }}" id="field_{{ field.id }}" class="form-control">
+    {% elif field.type == 'chooser' %}
+        <select name="field_{{ field.id }}" id="field_{{ field.id }}" class="form-control">
+            <option value="">-- Выберите уровень --</option>
+            {% for level in field.levels.all %}
+            <option value="{{ level.id }}">{{ level.caption }} (коэф. {{ level.ratio }})</option>
+            {% endfor %}
+        </select>
+    {% elif field.type == 'photo' %}
+        <input type="file" name="field_{{ field.id }}" id="field_{{ field.id }}" class="form-control" accept="image/*">
+    {% endif %}
+</div>
+{% empty %}
+<p>У этого критерия нет полей.</p>
+{% endfor %}

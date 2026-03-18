@@ -1,0 +1,25 @@
+{% extends 'main/base_dashboard.html' %}
+
+{% block content %}
+<h2>Детали работы: {{ work.name }}</h2>
+
+<h3>Критерии</h3>
+<a href="{% url 'criterion_create' %}?work={{ work.pk }}" class="btn btn-success mb-2">
+    Добавить критерий для этой работы
+</a>
+<ul>
+    {% for criterion in work.criterions.all %}
+    <li>
+        {{ criterion.name }}
+        <a href="{% url 'criterion_detail' criterion.pk %}">подробнее</a>
+    </li>
+    {% empty %}
+    <li>Нет критериев</li>
+    {% endfor %}
+</ul>
+<a href="{% url 'dashboard_home' %}?work={{ work.pk }}" class="btn btn-success mb-2">
+    На главную
+</a>
+
+<!-- Здесь можно добавить ссылки на редактирование / удаление работы -->
+{% endblock %}

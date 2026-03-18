@@ -1,0 +1,14 @@
+{% extends 'main/teacher/teacher_base.html' %}
+
+{% block content %}
+<h2>Выберите критерий для работы "{{ work.name }}"</h2>
+<ul class="list-group">
+    {% for criterion in criteria %}
+    <li class="list-group-item">
+        <a href="{% url 'teacher_achievement_create' work.id criterion.id %}">{{ criterion.name }}</a>
+    </li>
+    {% empty %}
+    <li class="list-group-item">У этой работы нет критериев</li>
+    {% endfor %}
+</ul>
+{% endblock %}

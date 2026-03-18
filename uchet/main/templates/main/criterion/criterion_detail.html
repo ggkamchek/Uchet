@@ -1,0 +1,44 @@
+{% extends 'main/base_dashboard.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>Критерий: {{ criterion.name }}</h2>
+    <p><strong>Работа:</strong> <a href="{% url 'work_detail' criterion.work.pk %}">{{ criterion.work.name }}</a></p>
+
+    <hr>
+    <h4>Поля критерия</h4>
+    <a href="{% url 'field_create' %}?criterion={{ criterion.pk }}" class="btn btn-sm btn-success mb-3">➕ Добавить поле</a>
+
+    {% if criterion.fields.all %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Название поля</th>
+                    <th>Тип</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for field in criterion.fields.all %}
+                <tr>
+                    <td>{{ field.caption }}</td>
+                    <td>{{ field.get_type_display }}</td>
+                    <td>
+                        <a href="{% url 'field_detail' field.pk %}" class="btn btn-sm btn-info">Просмотр</a>
+                        <a href="{% url 'field_update' field.pk %}" class="btn btn-sm btn-warning">Редактировать</a>
+                        <a href="{% url 'field_delete' field.pk %}" class="btn btn-sm btn-danger">Удалить</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Пока нет полей.</p>
+    {% endif %}
+
+    <hr>
+    <a href="{% url 'criterion_update' criterion.pk %}" class="btn btn-warning">Редактировать критерий</a>
+    <a href="{% url 'criterion_delete' criterion.pk %}" class="btn btn-danger">Удалить критерий</a>
+    <a href="{% url 'criterion_list' %}" class="btn btn-secondary">Назад к списку</a>
+</div>
+{% endblock %}

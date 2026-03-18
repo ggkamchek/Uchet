@@ -1,0 +1,42 @@
+{% extends 'main/base_dashboard.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>Период: {{ period.name }}</h2>
+    <p><strong>Дата начала:</strong> {{ period.start_date|date:"d.m.Y H:i" }}</p>
+    <p><strong>Дата окончания:</strong> {% if period.end_date %}{{ period.end_date|date:"d.m.Y H:i" }}{% else %}—{% endif %}</p>
+    <p><strong>Статус:</strong> {{ period.status|yesno:"Активен,Неактивен" }}</p>
+
+    <hr>
+    <h4>Достижения за период</h4>
+    {% if period.achievements.all %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Пользователь</th>
+                    <th>Работа</th>
+                    <th>Время добавления</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for achievement in period.achievements.all %}
+                <tr>
+                    <td>{{ achievement.id }}</td>
+                    <td>{{ achievement.user.get_full_name|default:achievement.user.username }}</td>
+                    <td>{{ achievement.work.name }}</td>
+                    <td>{{ achievement.time_of_addition|date:"d.m.Y H:i" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Нет достижений за этот период.</p>
+    {% endif %}
+
+    <hr>
+    <a href="{% url 'period_update' period.pk %}" class="btn btn-warning">Редактировать период</a>
+    <a href="{% url 'period_delete' period.pk %}" class="btn btn-danger">Удалить период</a>
+    <a href="{% url 'period_list' %}" class="btn btn-secondary">Назад к списку</a>
+</div>
+{% endblock %}

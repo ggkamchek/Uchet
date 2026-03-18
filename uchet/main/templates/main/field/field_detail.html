@@ -1,0 +1,45 @@
+{% extends 'main/base_dashboard.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>Поле: {{ field.caption }}</h2>
+    <p><strong>Критерий:</strong> <a href="{% url 'criterion_detail' field.criterion.pk %}">{{ field.criterion.name }}</a></p>
+    <p><strong>Тип поля:</strong> {{ field.get_type_display }}</p>
+
+    <hr>
+    <h4>Уровни поля</h4>
+    <a href="{% url 'level_create' %}?field={{ field.pk }}" class="btn btn-sm btn-success mb-3">➕ Добавить уровень</a>
+
+    {% if field.levels.all %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Название уровня</th>
+                    <th>Коэффициент</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for level in field.levels.all %}
+                <tr>
+                    <td>{{ level.caption }}</td>
+                    <td>{{ level.ratio }}</td>
+                    <td>
+                        <a href="{% url 'level_detail' level.pk %}" class="btn btn-sm btn-info">Просмотр</a>
+                        <a href="{% url 'level_update' level.pk %}" class="btn btn-sm btn-warning">Редактировать</a>
+                        <a href="{% url 'level_delete' level.pk %}" class="btn btn-sm btn-danger">Удалить</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Пока нет уровней.</p>
+    {% endif %}
+
+    <hr>
+    <a href="{% url 'field_update' field.pk %}" class="btn btn-warning">Редактировать поле</a>
+    <a href="{% url 'field_delete' field.pk %}" class="btn btn-danger">Удалить поле</a>
+    <a href="{% url 'field_list' %}" class="btn btn-secondary">Назад к списку</a>
+</div>
+{% endblock %}
