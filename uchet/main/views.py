@@ -10,12 +10,14 @@ from django.db import transaction
 from django.conf import settings
 import os
 import uuid
-from django.http import JsonResponse, HttpResponseBadRequest
+from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
 from django.views.decorators.http import require_GET
 from django.core import serializers
 import json
 
 from .models import User, Work, Criterion, Field, Level, Achievement, AchievementFieldValue, Period
+from django.utils.safestring import mark_safe
+from openpyxl import Workbook
 
 
 # Проверка прав доступа (только администратор)
@@ -34,6 +36,8 @@ def role_redirect(request):
             return redirect('dashboard_home')
         elif request.user.role == User.RoleChoices.USER:
             return redirect('teacher_dashboard')
+        elif request.user.role == User.RoleChoices.DIRECTOR:
+            return redirect('director_dashboard')
     return redirect('login')
 
 # Главная страница дашборда
@@ -47,6 +51,183 @@ def dashboard_home(request):
         'latest_periods': Period.objects.all().order_by('-id')[:5],
     }
     return render(request, 'main/dashboard_home.html', context)
+
+
+@user_passes_test(is_admin)
+def user_create_page(request):
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
+        role = request.POST.get('role', '')
+
+        allowed_roles = {User.RoleChoices.USER, User.RoleChoices.DIRECTOR}
+        if not username or not password or role not in allowed_roles:
+            messages.error(request, 'Заполните логин, пароль и выберите корректную роль.')
+            return redirect('user_create')
+
+        if User.objects.filter(username=username).exists():
+            messages.error(request, 'Пользователь с таким логином уже существует.')
+            return redirect('user_create')
+
+        # У модели есть обязательные поля, задаём безопасные значения по умолчанию.
+        User.objects.create_user(
+            username=username,
+            password=password,
+            role=role,
+            first_name='',
+            last_name='',
+            patronymic='',
+            department='',
+            email='',
+        )
+        messages.success(request, 'Пользователь успешно создан.')
+        return redirect('user_create')
+
+    users = User.objects.filter(role__in=[User.RoleChoices.USER, User.RoleChoices.DIRECTOR]).order_by('-id')
+    return render(request, 'main/user/user_create.html', {'users': users})
+
+
+def is_director(user):
+    return user.is_authenticated and user.role == User.RoleChoices.DIRECTOR
+
+
+@user_passes_test(is_director)
+def director_dashboard(request):
+    # Фильтры
+    period_id = request.GET.get('period')
+    department = request.GET.get('department')
+    work_id = request.GET.get('work')
+
+    achievements = Achievement.objects.select_related('user', 'period', 'work').prefetch_related(
+        'field_values__field'
+    )
+    if period_id:
+        achievements = achievements.filter(period_id=period_id)
+    if department:
+        achievements = achievements.filter(user__department=department)
+    if work_id:
+        achievements = achievements.filter(work_id=work_id)
+
+    # KPI
+    total_score = 0
+    dept_totals = {}
+    period_dept_totals = {}
+    teacher_ids = set()
+
+    for ach in achievements:
+        score = ach.total_score()
+        total_score += score
+        dept = ach.user.department or '—'
+        dept_totals[dept] = dept_totals.get(dept, 0) + score
+
+        per_name = ach.period.name if ach.period else '—'
+        period_dept_totals.setdefault(per_name, {})
+        period_dept_totals[per_name][dept] = period_dept_totals[per_name].get(dept, 0) + score
+        teacher_ids.add(ach.user_id)
+
+    teachers_total = User.objects.filter(role=User.RoleChoices.USER).count() or 1
+    teachers_count = len(teacher_ids)
+    teachers_percent = round(teachers_count * 100 / teachers_total, 1)
+
+    active_period = Period.objects.filter(status=True).first()
+
+    # Расчет цены одного балла от бюджета
+    budget_raw = request.GET.get('budget', '').strip()
+    point_price = None
+    if request.GET.get('reset') == '1':
+        budget_raw = ''
+    elif budget_raw:
+        try:
+            budget_value = float(budget_raw.replace(',', '.'))
+            if total_score > 0:
+                point_price = round(budget_value / total_score, 4)
+        except ValueError:
+            budget_raw = ''
+
+    # Данные для графиков
+    dept_labels = sorted(dept_totals.keys())
+    dept_values = [round(dept_totals[d], 2) for d in dept_labels]
+
+    period_labels = sorted(period_dept_totals.keys())
+    dept_series = {}
+    for per in period_labels:
+        for dept in period_dept_totals[per].keys():
+            dept_series.setdefault(dept, [])
+    for dept in dept_series.keys():
+        for per in period_labels:
+            dept_series[dept].append(round(period_dept_totals.get(per, {}).get(dept, 0), 2))
+
+    chart_data = {
+        'bar': {
+            'labels': dept_labels,
+            'values': dept_values,
+        },
+        'line': {
+            'labels': period_labels,
+            'series': dept_series,
+        },
+    }
+
+    # Данные для фильтров
+    periods = Period.objects.all().order_by('name')
+    departments = User.objects.filter(role=User.RoleChoices.USER).values_list('department', flat=True).distinct()
+    works = Work.objects.all().order_by('name')
+
+    context = {
+        'director_total_score': f'{total_score:.3f}',
+        'director_teachers_count': teachers_count,
+        'director_teachers_percent': teachers_percent,
+        'director_current_period_name': active_period.name if active_period else '',
+        'chart_data_json': mark_safe(json.dumps(chart_data)),
+        'periods': periods,
+        'departments': departments,
+        'works': works,
+        'selected_period': period_id or '',
+        'selected_department': department or '',
+        'selected_work': work_id or '',
+        'budget_value': budget_raw,
+        'point_price': point_price,
+    }
+    return render(request, 'main/director/director_dashboard.html', context)
+
+
+@user_passes_test(is_director)
+def director_export(request):
+    period_id = request.GET.get('period')
+    department = request.GET.get('department')
+    work_id = request.GET.get('work')
+
+    achievements = Achievement.objects.select_related('user', 'period', 'work').prefetch_related(
+        'field_values__field'
+    )
+    if period_id:
+        achievements = achievements.filter(period_id=period_id)
+    if department:
+        achievements = achievements.filter(user__department=department)
+    if work_id:
+        achievements = achievements.filter(work_id=work_id)
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Отчет руководителя'
+    ws.append(['Пользователь', 'Отделение', 'Работа', 'Период', 'Баллы', 'Дата добавления'])
+
+    for ach in achievements:
+        ws.append([
+            ach.user.username,
+            ach.user.department,
+            ach.work.name if ach.work else '',
+            ach.period.name if ach.period else '',
+            float(f'{ach.total_score():.3f}'),
+            ach.time_of_addition.strftime('%d.%m.%Y %H:%M') if ach.time_of_addition else '',
+        ])
+
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename="director_report.xlsx"'
+    wb.save(response)
+    return response
 
 # ---------- Работы (Work) ----------
 class WorkListView(AdminRequiredMixin, ListView):

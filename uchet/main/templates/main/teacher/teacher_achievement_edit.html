@@ -1,6 +1,36 @@
 {% extends 'main/teacher/teacher_base.html' %}
 {% block content %}
-<h2>Редактирование достижения</h2>
-<p>Функция редактирования пока не реализована.</p>
-<a href="{% url 'teacher_dashboard' %}" class="btn btn-secondary">Назад</a>
+<style>
+    .ach-edit-card {
+        max-width: 560px;
+        margin: 0 auto;
+        border-radius: 16px;
+        border: 0;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+    }
+    .ach-edit-card .card-header {
+        padding: 16px 20px 10px;
+        border-bottom: none;
+        background: #ffffff;
+    }
+    .ach-edit-title {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #111827;
+    }
+    .ach-edit-card .card-body {
+        padding: 12px 20px 16px;
+    }
+</style>
+
+<div class="card ach-edit-card">
+    <div class="card-header">
+        <h3 class="ach-edit-title">Редактирование достижения</h3>
+    </div>
+    <div class="card-body">
+        <p class="mb-3">Функция детального редактирования пока не реализована.</p>
+        <a href="{% url 'teacher_dashboard' %}" class="btn btn-outline-secondary">Назад</a>
+    </div>
+</div>
 {% endblock %}

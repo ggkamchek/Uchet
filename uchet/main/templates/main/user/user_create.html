@@ -1,0 +1,113 @@
+{% extends 'main/base_dashboard.html' %}
+
+{% block content %}
+<style>
+    .user-create-card {
+        max-width: 760px;
+        margin: 0 auto;
+        border-radius: 16px;
+        border: 0;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+    }
+    .user-create-card .card-header {
+        background: #ffffff;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 14px 18px;
+    }
+    .user-create-title {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #111827;
+    }
+    .user-create-card .card-body {
+        padding: 16px 18px;
+    }
+    .user-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+    .user-grid .full {
+        grid-column: 1 / -1;
+    }
+    @media (max-width: 768px) {
+        .user-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="card user-create-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="user-create-title">Создание пользователя</h3>
+        <a href="{% url 'dashboard_home' %}" class="btn btn-sm btn-icon-outline">
+            <i class="bi bi-arrow-left"></i> На главную
+        </a>
+    </div>
+    <div class="card-body">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %} py-2">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" class="mb-4">
+            {% csrf_token %}
+            <div class="user-grid">
+                <div>
+                    <label for="id_username" class="form-label">Логин</label>
+                    <input type="text" name="username" id="id_username" class="form-control" required>
+                </div>
+                <div>
+                    <label for="id_password" class="form-label">Пароль</label>
+                    <input type="password" name="password" id="id_password" class="form-control" required>
+                </div>
+                <div class="full">
+                    <label for="id_role" class="form-label">Роль</label>
+                    <select name="role" id="id_role" class="form-select" required>
+                        <option value="">-- Выберите роль --</option>
+                        <option value="teacher">Преподаватель</option>
+                        <option value="director">Руководитель</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end mt-3">
+                <button type="submit" class="btn btn-sm btn-icon-outline">
+                    <i class="bi bi-person-plus"></i> Создать
+                </button>
+            </div>
+        </form>
+
+        <h5 class="mb-2">Созданные пользователи</h5>
+        <div class="table-responsive">
+            <table class="table table-striped align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Логин</th>
+                        <th>Роль</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                        <tr>
+                            <td>{{ u.id }}</td>
+                            <td>{{ u.username }}</td>
+                            <td>{{ u.get_role_display }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="3">Пользователей пока нет.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,64 +1,231 @@
 {% extends 'main/teacher/teacher_base.html' %}
 
 {% block content %}
-<h2>Мои достижения</h2>
-<a href="{% url 'teacher_achievement_create' %}" class="btn btn-success mb-3">➕ Добавить достижение</a>
+<style>
+    .ach-card {
+        border: 0;
+        border-radius: 16px;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+        background: #fff;
+        transform: scale(1.06);          /* слегка увеличиваем всю карточку */
+        transform-origin: top center;
+    }
+
+    .ach-card-header {
+        padding: 18px 20px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .ach-title {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #111827;
+    }
+
+    .ach-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #00ff0d;
+    }
+
+    .ach-table-wrap {
+        padding: 0 8px 14px;
+        max-height: 520px;
+        overflow-y: auto;   /* только вертикальный скролл */
+        overflow-x: hidden; /* прячем горизонтальную полосу */
+    }
+
+    .ach-table {
+        margin: 0;
+        table-layout: fixed;
+    }
+
+    .ach-table thead th {
+        border-bottom: 0;
+        color: #6b7280;
+        font-weight: 600;
+        font-size: 1rem;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        background: transparent;
+    }
+
+    .ach-th-icon {
+        display: block;
+        color: #9ca3af;
+        font-size: 0.85rem;
+        margin-bottom: 2px;
+        line-height: 1;
+    }
+
+    .ach-th-text {
+        display: block;
+    }
+
+    .ach-status-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        font-weight: 700;
+        border: 1px solid transparent;
+        text-decoration: none;
+        user-select: none;
+    }
+
+    .ach-status-edit {
+        color: #0f766e;
+        background: #ecfeff;
+        border-color: #0f766e;
+    }
+
+    .ach-status-del {
+        color: #dc2626;
+        background: #fef2f2;
+        border-color: #dc2626;
+    }
+
+    /* Пагинация DataTables под макет */
+    .dataTables_wrapper .dataTables_paginate {
+        margin-top: 10px;
+        display: flex;
+        justify-content: center;
+    }
+    .dataTables_wrapper .dataTables_paginate .pagination {
+        gap: 6px;
+    }
+    .dataTables_wrapper .page-item .page-link {
+        border-radius: 8px;
+        border: none;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        background-color: #f3f4f6;
+        color: #4b5563;
+        font-size: 0.85rem;
+    }
+    .dataTables_wrapper .page-item.active .page-link {
+        background-color: #000000;
+        color: #ffffff;
+    }
+    .dataTables_wrapper .page-item.disabled .page-link {
+        background-color: #f9fafb;
+        color: #9ca3af;
+    }
+</style>
 
 {% if achievements %}
-    <div class="accordion" id="achievementsAccordion">
-        {% for achievement in achievements %}
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="heading{{ achievement.id }}">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ achievement.id }}" aria-expanded="false" aria-controls="collapse{{ achievement.id }}">
-                    <strong>{{ achievement.time_of_addition|date:"d.m.Y H:i" }}</strong> &nbsp;—&nbsp;
-                    {{ achievement.work.name }} &nbsp;|&nbsp;
-                    Период: {{ achievement.period.name }} &nbsp;|&nbsp;
-                    Баллы: <span class="badge bg-primary">{{ achievement.total_score }}</span>
-                </button>
-            </h2>
-            <div id="collapse{{ achievement.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ achievement.id }}" data-bs-parent="#achievementsAccordion">
-                <div class="accordion-body">
-                    <p><strong>Работа:</strong> {{ achievement.work.name }}</p>
-                    <p><strong>Критерий:</strong> 
-                        {% with first_field=achievement.field_values.first %}
-                            {% if first_field %}
-                                {{ first_field.field.criterion.name }}
-                            {% else %}
-                                Не указан
-                            {% endif %}
-                        {% endwith %}
-                    </p>
-                    <h6>Поля:</h6>
-                    <ul class="list-group mb-3">
-                        {% for field_value in achievement.field_values.all %}
-                        <li class="list-group-item">
-                            <strong>{{ field_value.field.caption }}:</strong>
-                            {% if field_value.field.type == 'text' %}
-                                {{ field_value.value }}
-                            {% elif field_value.field.type == 'chooser' %}
-                                {% with level_id=field_value.value %}
-                                    {% for level in field_value.field.levels.all %}
-                                        {% if level.id|stringformat:"s" == level_id %}
-                                            {{ level.caption }} (коэф. {{ level.ratio }})
-                                        {% endif %}
-                                    {% endfor %}
-                                {% endwith %}
-                            {% elif field_value.field.type == 'photo' %}
-                                <a href="{{ MEDIA_URL }}{{ field_value.value }}" target="_blank">Просмотреть фото</a>
-                            {% endif %}
-                        </li>
-                        {% empty %}
-                        <li class="list-group-item">Нет заполненных полей</li>
-                        {% endfor %}
-                    </ul>
-                    <a href="{% url 'teacher_achievement_edit' achievement.pk %}" class="btn btn-warning btn-sm">Редактировать</a>
-                    <a href="{% url 'teacher_achievement_delete' achievement.pk %}" class="btn btn-danger btn-sm">Удалить</a>
-                </div>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+
+    <div class="card ach-card">
+        <div class="ach-card-header">
+            <h3 class="ach-title">Достижения</h3>
+
+            <div class="ach-header-actions">
+                <a href="{% url 'teacher_achievement_create' %}" class="btn btn-success btn-sm">
+                    <i class="bi bi-plus-lg"></i>
+                </a>
             </div>
         </div>
-        {% endfor %}
+
+        <div class="ach-table-wrap">
+            <div class="table-responsive">
+                <table id="teacherAchievementsTable" class="table ach-table align-middle" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th style="min-width: 160px;">
+                                <span class="ach-th-icon"><i class="bi bi-search"></i></span>
+                                <span class="ach-th-text">Name</span>
+                            </th>
+                            <th style="min-width: 160px;">
+                                <span class="ach-th-icon"><i class="bi bi-funnel"></i></span>
+                                <span class="ach-th-text">Критерий</span>
+                            </th>
+                            <th style="min-width: 140px;">
+                                <span class="ach-th-icon"><i class="bi bi-calendar2-week"></i></span>
+                                <span class="ach-th-text">Период</span>
+                            </th>
+                            <th style="min-width: 130px;">
+                                <span class="ach-th-icon"><i class="bi bi-calendar"></i></span>
+                                <span class="ach-th-text">Дата</span>
+                            </th>
+                            <th style="min-width: 110px;">
+                                <span class="ach-th-icon"><i class="bi bi-calculator"></i></span>
+                                <span class="ach-th-text">Расчет</span>
+                            </th>
+                            <th class="text-end" style="min-width: 120px;">
+                                <span class="ach-th-icon"><i class="bi bi-arrow-down-up"></i></span>
+                                <span class="ach-th-text">Status</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for achievement in achievements %}
+                            {% with first_field=achievement.field_values.first %}
+                                <tr>
+                                    <td>{{ achievement.work.name }}</td>
+                                    <td>
+                                        {% if first_field %}
+                                            {{ first_field.field.criterion.name }}
+                                        {% else %}
+                                            —
+                                        {% endif %}
+                                    </td>
+                                    <td data-order="{{ achievement.period.start_date|date:'YmdHis' }}">{{ achievement.period.name }}</td>
+                                    <td data-order="{{ achievement.time_of_addition|date:'YmdHis' }}">{{ achievement.time_of_addition|date:"d.m.Y" }}</td>
+                                    <td>{{ achievement.total_score|floatformat:0 }}</td>
+                                    <td class="text-end">
+                                        <a class="ach-status-btn ach-status-edit" href="{% url 'teacher_achievement_edit' achievement.pk %}">R</a>
+                                        <a class="ach-status-btn ach-status-del" href="{% url 'teacher_achievement_delete' achievement.pk %}">D</a>
+                                    </td>
+                                </tr>
+                            {% endwith %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(function () {
+            $('#teacherAchievementsTable').DataTable({
+                paging: true,
+                pageLength: 10,
+                searching: false,
+                ordering: true,
+                order: [[3, 'desc']], // по умолчанию новые по дате сверху
+                lengthChange: false,
+                info: false,
+                autoWidth: false,
+                language: {
+                    paginate: {
+                        previous: '&lt;',
+                        next: '&gt;'
+                    },
+                    zeroRecords: 'Нет данных для отображения'
+                },
+                columnDefs: [
+                    { targets: -1, orderable: false, className: 'text-end' } // столбец Status не сортируем, выравниваем вправо
+                ]
+            });
+        });
+    </script>
 {% else %}
-    <p>У вас пока нет достижений.</p>
+    <div class="alert alert-secondary">У вас пока нет достижений.</div>
 {% endif %}
 {% endblock %}

@@ -42,6 +42,7 @@ urlpatterns = [
     path('periods/<int:pk>/', views.PeriodDetailView.as_view(), name='period_detail'),
     path('periods/<int:pk>/edit/', views.PeriodUpdateView.as_view(), name='period_update'),
     path('periods/<int:pk>/delete/', views.PeriodDeleteView.as_view(), name='period_delete'),
+    path('users/create/', views.user_create_page, name='user_create'),
 
     path('teacher/', views.teacher_dashboard, name='teacher_dashboard'),
     path('teacher/achievements/create/', views.teacher_achievement_create_page, name='teacher_achievement_create'),
@@ -50,4 +51,7 @@ urlpatterns = [
     path('teacher/achievements/save/', views.teacher_achievement_save, name='teacher_achievement_save'),
     path('teacher/achievements/<int:pk>/delete/', views.TeacherAchievementDeleteView.as_view(), name='teacher_achievement_delete'),
     path('teacher/achievements/<int:pk>/edit/', views.TeacherAchievementEditView.as_view(), name='teacher_achievement_edit'),
+
+    path('director/', views.director_dashboard, name='director_dashboard'),
+    path('director/export/', views.director_export, name='director_export'),
 ]

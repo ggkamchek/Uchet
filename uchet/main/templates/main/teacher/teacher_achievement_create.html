@@ -1,33 +1,70 @@
 {% extends 'main/teacher/teacher_base.html' %}
 
 {% block content %}
-<h2>Добавить достижение</h2>
-<form id="achievement-form" method="post" enctype="multipart/form-data" action="{% url 'teacher_achievement_save' %}">
-    {% csrf_token %}
-    <div class="mb-3">
-        <label for="work" class="form-label">Работа</label>
-        <select name="work" id="work" class="form-control" required>
-            <option value="">-- Выберите работу --</option>
-            {% for work in works %}
-            <option value="{{ work.id }}">{{ work.name }}</option>
-            {% endfor %}
-        </select>
-    </div>
+<style>
+    .ach-form-card {
+        max-width: 640px;
+        margin: 0 auto;
+        border-radius: 16px;
+        border: 0;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+    }
+    .ach-form-card .card-header {
+        padding: 16px 20px 10px;
+        border-bottom: none;
+        background: #ffffff;
+    }
+    .ach-form-card-title {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #111827;
+    }
+    .ach-form-card .card-body {
+        padding: 10px 20px 16px;
+    }
+    .ach-form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+</style>
 
-    <div class="mb-3">
-        <label for="criterion" class="form-label">Критерий</label>
-        <select name="criterion" id="criterion" class="form-control" required disabled>
-            <option value="">-- Сначала выберите работу --</option>
-        </select>
+<div class="card ach-form-card">
+    <div class="card-header">
+        <h3 class="ach-form-card-title">Добавить достижение</h3>
     </div>
+    <div class="card-body">
+        <form id="achievement-form" method="post" enctype="multipart/form-data" action="{% url 'teacher_achievement_save' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="work" class="form-label">Работа</label>
+                <select name="work" id="work" class="form-control" required>
+                    <option value="">-- Выберите работу --</option>
+                    {% for work in works %}
+                    <option value="{{ work.id }}">{{ work.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-    <div id="fields-container" class="mb-3">
-        <!-- Сюда будут загружаться поля критерия -->
+            <div class="mb-3">
+                <label for="criterion" class="form-label">Критерий</label>
+                <select name="criterion" id="criterion" class="form-control" required disabled>
+                    <option value="">-- Сначала выберите работу --</option>
+                </select>
+            </div>
+
+            <div id="fields-container" class="mb-3">
+                <!-- Сюда будут загружаться поля критерия -->
+            </div>
+
+            <div class="ach-form-actions">
+                <a href="{% url 'teacher_dashboard' %}" class="btn btn-outline-secondary">Отмена</a>
+                <button type="submit" class="btn btn-success">Сохранить</button>
+            </div>
+        </form>
     </div>
-
-    <button type="submit" class="btn btn-success">Сохранить достижение</button>
-    <a href="{% url 'teacher_dashboard' %}" class="btn btn-secondary">Отмена</a>
-</form>
+</div>
 
 <script>
     const workSelect = document.getElementById('work');

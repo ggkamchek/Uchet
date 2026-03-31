@@ -2,7 +2,9 @@
 
 {% block content %}
 <h2>Список критериев</h2>
-<a href="{% url 'criterion_create' %}" class="btn btn-primary mb-3">Добавить критерий</a>
+<a href="{% url 'criterion_create' %}" class="btn btn-sm btn-icon-outline mb-3">
+    <i class="bi bi-plus-lg"></i> Добавить критерий
+</a>
 <table class="table table-striped">
     <thead>
         <tr>

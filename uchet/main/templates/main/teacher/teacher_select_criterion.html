@@ -1,14 +1,50 @@
 {% extends 'main/teacher/teacher_base.html' %}
 
 {% block content %}
-<h2>Выберите критерий для работы "{{ work.name }}"</h2>
-<ul class="list-group">
-    {% for criterion in criteria %}
-    <li class="list-group-item">
-        <a href="{% url 'teacher_achievement_create' work.id criterion.id %}">{{ criterion.name }}</a>
-    </li>
-    {% empty %}
-    <li class="list-group-item">У этой работы нет критериев</li>
-    {% endfor %}
-</ul>
+<style>
+    .ach-crit-card {
+        max-width: 640px;
+        margin: 0 auto;
+        border-radius: 16px;
+        border: 0;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+    }
+    .ach-crit-card .card-header {
+        padding: 16px 20px 10px;
+        border-bottom: none;
+        background: #ffffff;
+    }
+    .ach-crit-title {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 600;
+        color: #111827;
+    }
+    .ach-crit-subtitle {
+        margin-top: 4px;
+        font-size: 0.9rem;
+        color: #6b7280;
+    }
+    .ach-crit-card .card-body {
+        padding: 10px 20px 16px;
+    }
+</style>
+
+<div class="card ach-crit-card">
+    <div class="card-header">
+        <h3 class="ach-crit-title">Выберите критерий</h3>
+        <div class="ach-crit-subtitle">Работа: {{ work.name }}</div>
+    </div>
+    <div class="card-body">
+        <ul class="list-group">
+            {% for criterion in criteria %}
+            <li class="list-group-item">
+                <a href="{% url 'teacher_achievement_create' work.id criterion.id %}">{{ criterion.name }}</a>
+            </li>
+            {% empty %}
+            <li class="list-group-item">У этой работы нет критериев</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
 {% endblock %}

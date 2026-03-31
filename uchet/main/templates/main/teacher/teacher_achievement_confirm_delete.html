@@ -1,24 +1,51 @@
 {% extends 'main/teacher/teacher_base.html' %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-6 offset-md-3">
-        <div class="card">
-            <div class="card-header bg-danger text-white">
-                <h5 class="mb-0">Подтверждение удаления</h5>
+<style>
+    .ach-delete-card {
+        max-width: 560px;
+        margin: 0 auto;
+        border-radius: 16px;
+        border: 0;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+    }
+    .ach-delete-card .card-header {
+        padding: 16px 20px 10px;
+        border-bottom: none;
+        background: #fef2f2;
+    }
+    .ach-delete-title {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 600;
+        color: #b91c1c;
+    }
+    .ach-delete-card .card-body {
+        padding: 12px 20px 16px;
+    }
+    .ach-delete-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+</style>
+
+<div class="card ach-delete-card">
+    <div class="card-header">
+        <h3 class="ach-delete-title">Подтверждение удаления</h3>
+    </div>
+    <div class="card-body">
+        <p>Вы уверены, что хотите удалить достижение от {{ object.time_of_addition|date:"d.m.Y H:i" }}?</p>
+        <p>Работа: {{ object.work.name }}</p>
+        <p>Период: {{ object.period.name }}</p>
+        <p class="text-danger mb-3">Это действие нельзя отменить.</p>
+        <form method="post">
+            {% csrf_token %}
+            <div class="ach-delete-actions">
+                <a href="{% url 'teacher_dashboard' %}" class="btn btn-outline-secondary">Отмена</a>
+                <button type="submit" class="btn btn-danger">Удалить</button>
             </div>
-            <div class="card-body">
-                <p>Вы уверены, что хотите удалить достижение от {{ object.time_of_addition|date:"d.m.Y H:i" }}?</p>
-                <p>Работа: {{ object.work.name }}</p>
-                <p>Период: {{ object.period.name }}</p>
-                <p class="text-danger">Это действие нельзя отменить.</p>
-                <form method="post">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">Да, удалить</button>
-                    <a href="{% url 'teacher_dashboard' %}" class="btn btn-secondary">Отмена</a>
-                </form>
-            </div>
-        </div>
+        </form>
     </div>
 </div>
 {% endblock %}
