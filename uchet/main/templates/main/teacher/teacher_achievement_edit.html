@@ -2,7 +2,7 @@
 {% block content %}
 <style>
     .ach-edit-card {
-        max-width: 560px;
+        max-width: 760px;
         margin: 0 auto;
         border-radius: 16px;
         border: 0;
@@ -29,8 +29,53 @@
         <h3 class="ach-edit-title">Редактирование достижения</h3>
     </div>
     <div class="card-body">
-        <p class="mb-3">Функция детального редактирования пока не реализована.</p>
-        <a href="{% url 'teacher_dashboard' %}" class="btn btn-outline-secondary">Назад</a>
+        <div class="mb-3 text-muted">
+            Работа: <strong>{{ achievement.work.name }}</strong>
+            {% if criterion %} | Критерий: <strong>{{ criterion.name }}</strong>{% endif %}
+        </div>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% for item in fields_data %}
+                <div class="mb-3">
+                    <label for="field_{{ item.field.id }}" class="form-label">{{ item.field.caption }}</label>
+
+                    {% if item.field.type == 'text' %}
+                        <input type="text"
+                               name="field_{{ item.field.id }}"
+                               id="field_{{ item.field.id }}"
+                               class="form-control"
+                               value="{{ item.current_value }}">
+
+                    {% elif item.field.type == 'chooser' %}
+                        <select name="field_{{ item.field.id }}" id="field_{{ item.field.id }}" class="form-control">
+                            <option value="">-- Выберите уровень --</option>
+                            {% for level in item.field.levels.all %}
+                                <option value="{{ level.id }}"
+                                    {% if item.current and item.current.value == level.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ level.caption }} (коэф. {{ level.ratio }})
+                                </option>
+                            {% endfor %}
+                        </select>
+
+                    {% elif item.field.type == 'photo' %}
+                        {% if item.current and item.current.value %}
+                            <div class="mb-2">
+                                <a href="{{ MEDIA_URL }}{{ item.current.value }}" target="_blank">Текущее фото</a>
+                            </div>
+                        {% endif %}
+                        <input type="file" name="field_{{ item.field.id }}" id="field_{{ item.field.id }}" class="form-control" accept="image/*">
+                    {% endif %}
+                </div>
+            {% empty %}
+                <p class="text-muted">Для этого критерия нет редактируемых полей.</p>
+            {% endfor %}
+
+            <div class="d-flex justify-content-end gap-2 mt-3">
+                <a href="{% url 'teacher_dashboard' %}" class="btn btn-outline-secondary">Отмена</a>
+                <button type="submit" class="btn btn-success">Сохранить</button>
+            </div>
+        </form>
     </div>
 </div>
 {% endblock %}

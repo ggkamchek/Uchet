@@ -125,8 +125,7 @@
     }
 </style>
 
-{% if achievements %}
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
 
     <div class="card ach-card">
         <div class="ach-card-header">
@@ -171,7 +170,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for achievement in achievements %}
+                    {% for achievement in achievements %}
                             {% with first_field=achievement.field_values.first %}
                                 <tr>
                                     <td>{{ achievement.work.name }}</td>
@@ -217,7 +216,8 @@
                         previous: '&lt;',
                         next: '&gt;'
                     },
-                    zeroRecords: 'Нет данных для отображения'
+                zeroRecords: 'Нет данных для отображения',
+                emptyTable: 'У вас пока нет достижений. Нажмите +, чтобы добавить первое.'
                 },
                 columnDefs: [
                     { targets: -1, orderable: false, className: 'text-end' } // столбец Status не сортируем, выравниваем вправо
@@ -225,7 +225,4 @@
             });
         });
     </script>
-{% else %}
-    <div class="alert alert-secondary">У вас пока нет достижений.</div>
-{% endif %}
 {% endblock %}

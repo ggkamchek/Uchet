@@ -50,7 +50,7 @@ urlpatterns = [
     path('teacher/achievements/get_fields/<int:criterion_id>/', views.get_fields_html, name='get_fields_html'),
     path('teacher/achievements/save/', views.teacher_achievement_save, name='teacher_achievement_save'),
     path('teacher/achievements/<int:pk>/delete/', views.TeacherAchievementDeleteView.as_view(), name='teacher_achievement_delete'),
-    path('teacher/achievements/<int:pk>/edit/', views.TeacherAchievementEditView.as_view(), name='teacher_achievement_edit'),
+    path('teacher/achievements/<int:pk>/edit/', views.teacher_achievement_edit, name='teacher_achievement_edit'),
 
     path('director/', views.director_dashboard, name='director_dashboard'),
     path('director/export/', views.director_export, name='director_export'),

@@ -210,11 +210,11 @@ def director_export(request):
     wb = Workbook()
     ws = wb.active
     ws.title = 'Отчет руководителя'
-    ws.append(['Пользователь', 'Отделение', 'Работа', 'Период', 'Баллы', 'Дата добавления'])
+    ws.append(['ФИО пользователя', 'Отделение', 'Работа', 'Период', 'Баллы', 'Дата добавления'])
 
     for ach in achievements:
         ws.append([
-            ach.user.username,
+            f"{ach.user.last_name} {ach.user.first_name} {ach.user.patronymic}".strip(),
             ach.user.department,
             ach.work.name if ach.work else '',
             ach.period.name if ach.period else '',
@@ -614,11 +614,97 @@ def teacher_achievement_save(request):
     else:
         return redirect('teacher_achievement_create')
     
-class TeacherAchievementEditView(TeacherRequiredMixin, UpdateView):
-    model = Achievement
-    fields = []  # пока пусто, потом можно добавить редактирование
-    template_name = 'main/teacher/teacher_achievement_edit.html'
-    success_url = reverse_lazy('teacher_dashboard')
+@teacher_required
+def teacher_achievement_edit(request, pk):
+    achievement = get_object_or_404(
+        Achievement.objects.prefetch_related('field_values__field__criterion', 'field_values__field__levels'),
+        pk=pk,
+        user=request.user
+    )
 
-    def get_queryset(self):
-        return Achievement.objects.filter(user=self.request.user)
+    existing_values = {fv.field_id: fv for fv in achievement.field_values.all()}
+    first_value = achievement.field_values.first()
+    criterion = first_value.field.criterion if first_value else None
+
+    if not criterion:
+        messages.error(request, 'Невозможно определить критерий достижения для редактирования.')
+        return redirect('teacher_dashboard')
+
+    fields = Field.objects.filter(criterion=criterion).prefetch_related('levels')
+
+    if request.method == 'POST':
+        for field in fields:
+            field_key = f'field_{field.id}'
+            field_value_obj = existing_values.get(field.id)
+
+            if field.type == 'text':
+                value = request.POST.get(field_key, '').strip()
+                if field_value_obj:
+                    field_value_obj.value = value
+                    field_value_obj.save(update_fields=['value'])
+                elif value:
+                    AchievementFieldValue.objects.create(
+                        achievement=achievement,
+                        field=field,
+                        value=value
+                    )
+
+            elif field.type == 'chooser':
+                level_id = request.POST.get(field_key)
+                if level_id:
+                    try:
+                        Level.objects.get(pk=level_id, field=field)
+                    except Level.DoesNotExist:
+                        continue
+
+                    if field_value_obj:
+                        field_value_obj.value = str(level_id)
+                        field_value_obj.save(update_fields=['value'])
+                    else:
+                        AchievementFieldValue.objects.create(
+                            achievement=achievement,
+                            field=field,
+                            value=str(level_id)
+                        )
+
+            elif field.type == 'photo' and field_key in request.FILES:
+                uploaded_file = request.FILES[field_key]
+                upload_dir = os.path.join(settings.MEDIA_ROOT, 'achievement_photos')
+                os.makedirs(upload_dir, exist_ok=True)
+                ext = os.path.splitext(uploaded_file.name)[1]
+                filename = f"{achievement.id}_{field.id}_{uuid.uuid4().hex}{ext}"
+                file_path = os.path.join(upload_dir, filename)
+
+                with open(file_path, 'wb+') as destination:
+                    for chunk in uploaded_file.chunks():
+                        destination.write(chunk)
+
+                relative_path = os.path.join('achievement_photos', filename)
+                if field_value_obj:
+                    field_value_obj.value = relative_path
+                    field_value_obj.save(update_fields=['value'])
+                else:
+                    AchievementFieldValue.objects.create(
+                        achievement=achievement,
+                        field=field,
+                        value=relative_path
+                    )
+
+        messages.success(request, 'Достижение успешно обновлено.')
+        return redirect('teacher_dashboard')
+
+    fields_data = []
+    for field in fields:
+        current = existing_values.get(field.id)
+        fields_data.append({
+            'field': field,
+            'current': current,
+            'current_value': current.value if current else '',
+        })
+
+    context = {
+        'achievement': achievement,
+        'fields_data': fields_data,
+        'criterion': criterion,
+    }
+    return render(request, 'main/teacher/teacher_achievement_edit.html', context)
