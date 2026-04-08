@@ -72,40 +72,12 @@
             height: 100%;
         }
 
-        .logo-brand-row {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.3em;
-            margin-top: 0.45rem;
+        .logo-text {
             font-size: 4.1rem;
             font-weight: 600;
             letter-spacing: 0.03em;
+            margin-top: 0.45rem;
             line-height: 1;
-            white-space: nowrap;
-        }
-
-        .logo-text {
-            margin: 0;
-            font-size: 1em;
-            line-height: 1;
-            display: inline-block;
-        }
-
-        .tkpi-book-inline-wrap {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            height: 1.48em;
-            line-height: 0;
-            transform: translateY(0.2em);
-        }
-
-        .tkpi-book-inline-wrap svg {
-            height: 100%;
-            width: auto;
-            display: block;
         }
 
         /* Правая часть с формой */
@@ -180,7 +152,7 @@
                 padding: 2rem 1.5rem 1.5rem;
             }
 
-            .logo-brand-row {
+            .logo-text {
                 text-align: center;
             }
 
@@ -197,12 +169,7 @@
                 <div class="logo-icon" role="img" aria-label="TeachKPI">
                     {% include 'main/includes/teachkpi_book_icon.html' with book_uid='loginHero' %}
                 </div>
-                <div class="logo-brand-row">
-                    <span class="tkpi-book-inline-wrap" aria-hidden="true">
-                        {% include 'main/includes/teachkpi_book_icon.html' with book_uid='loginBrand' %}
-                    </span>
-                    <span class="logo-text">TeachKPI</span>
-                </div>
+                <div class="logo-text">TeachKPI</div>
             </div>
 
             <div class="auth-form-side">
