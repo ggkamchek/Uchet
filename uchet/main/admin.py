@@ -26,9 +26,13 @@ class WorkAdmin(admin.ModelAdmin):
 
 @admin.register(Criterion)
 class CriterionAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'work')
+    list_display = ('id', 'name', 'work', 'get_ratio')
     list_filter = ('work',)
     search_fields = ('name',)
+    
+    def get_ratio(self, obj):
+        return f"{obj.ratio}"
+    get_ratio.short_description = 'Коэффициент'
 
 @admin.register(Level)
 class LevelAdmin(admin.ModelAdmin):

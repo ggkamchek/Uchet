@@ -31,8 +31,17 @@
     .user-grid .full {
         grid-column: 1 / -1;
     }
+    .user-grid .fio-row {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+    }
     @media (max-width: 768px) {
         .user-grid {
+            grid-template-columns: 1fr;
+        }
+        .user-grid .fio-row {
             grid-template-columns: 1fr;
         }
     }
@@ -65,6 +74,20 @@
                     <label for="id_password" class="form-label">Пароль</label>
                     <input type="password" name="password" id="id_password" class="form-control" required>
                 </div>
+                <div class="fio-row">
+                    <div>
+                        <label for="id_last_name" class="form-label">Фамилия</label>
+                        <input type="text" name="last_name" id="id_last_name" class="form-control" maxlength="25" required autocomplete="family-name">
+                    </div>
+                    <div>
+                        <label for="id_first_name" class="form-label">Имя</label>
+                        <input type="text" name="first_name" id="id_first_name" class="form-control" maxlength="25" required autocomplete="given-name">
+                    </div>
+                    <div>
+                        <label for="id_patronymic" class="form-label">Отчество</label>
+                        <input type="text" name="patronymic" id="id_patronymic" class="form-control" maxlength="25" required autocomplete="additional-name">
+                    </div>
+                </div>
                 <div class="full">
                     <label for="id_role" class="form-label">Роль</label>
                     <select name="role" id="id_role" class="form-select" required>
@@ -72,6 +95,16 @@
                         <option value="teacher">Преподаватель</option>
                         <option value="director">Руководитель</option>
                     </select>
+                </div>
+                <div class="full" id="department-wrap">
+                    <label for="id_department" class="form-label">Отделение</label>
+                    <select name="department" id="id_department" class="form-select" aria-describedby="department-help">
+                        <option value="">— для руководителя можно не указывать —</option>
+                        {% for dep in department_choices %}
+                            <option value="{{ dep }}">{{ dep }}</option>
+                        {% endfor %}
+                    </select>
+                    <div id="department-help" class="form-text">Для преподавателя отделение обязательно.</div>
                 </div>
             </div>
 
@@ -89,7 +122,10 @@
                     <tr>
                         <th>ID</th>
                         <th>Логин</th>
+                        <th>ФИО</th>
                         <th>Роль</th>
+                        <th>Отделение</th>
+                        <th class="text-end" style="width:1%"><span class="visually-hidden">Действия</span></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -97,11 +133,18 @@
                         <tr>
                             <td>{{ u.id }}</td>
                             <td>{{ u.username }}</td>
+                            <td>{% if u.last_name or u.first_name or u.patronymic %}{{ u.last_name }} {{ u.first_name }} {{ u.patronymic }}{% else %}—{% endif %}</td>
                             <td>{{ u.get_role_display }}</td>
+                            <td>{% if u.department %}{{ u.department }}{% else %}—{% endif %}</td>
+                            <td class="text-end text-nowrap">
+                                {% if u.id != request.user.id %}
+                                <a href="{% url 'user_delete' u.id %}" class="btn btn-sm btn-danger">Удалить</a>
+                                {% endif %}
+                            </td>
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="3">Пользователей пока нет.</td>
+                            <td colspan="6">Пользователей пока нет.</td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -109,5 +152,18 @@
         </div>
     </div>
 </div>
+<script>
+(function () {
+    var role = document.getElementById('id_role');
+    var dep = document.getElementById('id_department');
+    if (!role || !dep) return;
+    function sync() {
+        var isTeacher = role.value === 'teacher';
+        dep.required = isTeacher;
+    }
+    role.addEventListener('change', sync);
+    sync();
+})();
+</script>
 {% endblock %}
 

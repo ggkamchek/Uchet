@@ -4,7 +4,6 @@
 <div class="container">
     <h2>Критерий: {{ criterion.name }}</h2>
     <p><strong>Работа:</strong> <a href="{% url 'work_detail' criterion.work.pk %}">{{ criterion.work.name }}</a></p>
-    <p><strong>Коэффициент:</strong> {{ criterion.ratio }}</p>
 
     <hr>
     <h4>Поля критерия</h4>

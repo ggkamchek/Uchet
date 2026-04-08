@@ -1,4 +1,5 @@
 {% extends 'main/director/director_base.html' %}
+{% load director_extras %}
 
 {% block content %}
 <style>
@@ -54,6 +55,12 @@
         font-size: 1.2rem;
         font-weight: 500;
     }
+    .dir-summary-filter-note {
+        font-size: 0.82rem;
+        color: #6b7280;
+        margin-top: 6px;
+        line-height: 1.35;
+    }
 
     .dir-row-main {
         display: grid;
@@ -73,6 +80,35 @@
         font-size: 0.98rem;
         font-weight: 500;
         margin-bottom: 8px;
+    }
+    .dir-chart-wrap {
+        position: relative;
+        min-height: 160px;
+    }
+    .dir-chart-wrap canvas {
+        display: block;
+        max-width: 100%;
+    }
+    .dir-chart-empty {
+        display: none;
+        position: absolute;
+        inset: 0;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 16px;
+        color: #9ca3af;
+        font-size: 0.92rem;
+        background: #f9fafb;
+        border-radius: 10px;
+        border: 1px dashed #d1d5db;
+    }
+    .dir-chart-wrap.is-empty .dir-chart-empty {
+        display: flex;
+    }
+    .dir-chart-wrap.is-empty canvas {
+        visibility: hidden;
+        pointer-events: none;
     }
     .dir-graph-placeholder {
         border-radius: 10px;
@@ -196,6 +232,246 @@
             grid-template-columns: 1fr;
         }
     }
+
+    .dir-preview-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 2000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        box-sizing: border-box;
+    }
+    .dir-preview-overlay.is-open {
+        display: flex;
+    }
+    .dir-preview-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.5);
+        cursor: pointer;
+    }
+    .dir-preview-modal {
+        position: relative;
+        z-index: 1;
+        max-width: 1280px;
+        width: min(94vw, 1280px);
+        max-height: calc(100vh - 32px);
+        display: flex;
+        flex-direction: column;
+        background: #ffffff;
+        border-radius: 18px;
+        box-shadow: 0 24px 56px rgba(0, 0, 0, 0.28);
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+    }
+    .dir-preview-modal-head {
+        padding: 16px 18px 10px;
+        flex-shrink: 0;
+        border-bottom: 1px solid #e5e7eb;
+        background: #fafafa;
+    }
+    .dir-preview-title {
+        font-size: 1.08rem;
+        font-weight: 600;
+        margin: 0 0 6px;
+        color: #111827;
+    }
+    .dir-preview-hint {
+        font-size: 0.88rem;
+        color: #6b7280;
+        margin: 0;
+        line-height: 1.45;
+    }
+    .dir-preview-stale {
+        display: none;
+        margin-top: 10px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
+        color: #92400e;
+        font-size: 0.88rem;
+        line-height: 1.4;
+    }
+    .dir-preview-stale.is-visible {
+        display: block;
+    }
+    .dir-preview-scroll {
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+        padding: 14px 18px;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+    }
+    .dir-preview-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.95fr);
+        gap: 20px 24px;
+        flex: 1;
+        min-height: 0;
+        align-items: stretch;
+    }
+    .dir-preview-col-table {
+        min-width: 0;
+        overflow: auto;
+        padding-bottom: 4px;
+    }
+    .dir-preview-col-teachers {
+        min-width: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-right: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        border-left: 1px solid #e5e7eb;
+        padding-left: 20px;
+        margin-left: 4px;
+    }
+    @media (max-width: 900px) {
+        .dir-preview-layout {
+            grid-template-columns: 1fr;
+        }
+        .dir-preview-col-teachers {
+            max-height: min(50vh, 420px);
+            border-left: none;
+            padding-left: 0;
+            margin-left: 0;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 16px;
+            margin-top: 4px;
+        }
+    }
+    .dir-preview-teachers-heading {
+        font-size: 0.92rem;
+        font-weight: 600;
+        color: #374151;
+        margin: 0 0 2px;
+        padding: 0 2px;
+        flex-shrink: 0;
+    }
+    .dir-preview-actions {
+        flex-shrink: 0;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 14px 18px;
+        border-top: 1px solid #e5e7eb;
+        background: #fafafa;
+    }
+    .dir-preview-actions .dir-btn-apply {
+        width: auto;
+        margin: 0;
+        padding: 8px 20px;
+    }
+    .dir-preview-actions .dir-btn-reset {
+        margin: 0;
+    }
+    .dir-preview-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 20px;
+        margin-bottom: 12px;
+        font-size: 0.92rem;
+    }
+    .dir-preview-meta span { color: #4b5563; }
+    .dir-preview-meta strong { color: #111827; }
+    table.dir-preview-itog {
+        width: 100%;
+        font-size: 0.9rem;
+        border-collapse: collapse;
+        margin-bottom: 0;
+    }
+    .dir-preview-itog th,
+    .dir-preview-itog td {
+        border: 1px solid #e5e7eb;
+        padding: 6px 10px;
+        text-align: left;
+    }
+    .dir-preview-itog thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #fef9c3;
+        font-weight: 600;
+        box-shadow: 0 1px 0 #e5e7eb;
+    }
+    .dir-preview-itog td.num { text-align: center; width: 3rem; }
+    .dir-preview-itog td.ball { text-align: right; white-space: nowrap; }
+    .dir-preview-itog tfoot td {
+        font-weight: 600;
+        background: #f3f4f6;
+    }
+    .dir-preview-itog tbody tr[data-teacher-idx] {
+        cursor: pointer;
+    }
+    .dir-preview-itog tbody tr[data-teacher-idx]:hover {
+        background: #f3f4f6;
+    }
+    .dir-preview-teacher.dir-preview-teacher--hl {
+        box-shadow: 0 0 0 2px #4f46e5;
+        border-color: #c7d2fe;
+    }
+    .dir-preview-teacher {
+        margin-top: 0;
+        flex-shrink: 0;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #fff;
+    }
+    .dir-preview-teacher summary {
+        cursor: pointer;
+        padding: 10px 12px;
+        font-weight: 500;
+        background: #f9fafb;
+        list-style: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+    }
+    .dir-preview-teacher summary::-webkit-details-marker { display: none; }
+    .dir-preview-teacher summary::after {
+        content: '▾';
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+    .dir-preview-teacher[open] summary::after { transform: rotate(-180deg); display: inline-block; }
+    .dir-preview-teacher-body { padding: 10px 12px 12px; border-top: 1px solid #e5e7eb; }
+    .dir-preview-ach {
+        margin-top: 10px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+    }
+    .dir-preview-ach:first-child { margin-top: 0; }
+    .dir-preview-ach-head {
+        font-weight: 500;
+        margin-bottom: 6px;
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .dir-preview-field {
+        font-size: 0.88rem;
+        color: #374151;
+        margin: 2px 0;
+        padding-left: 0.25rem;
+        border-left: 2px solid #c7d2fe;
+    }
+    .dir-preview-empty {
+        color: #9ca3af;
+        font-size: 0.95rem;
+        padding: 12px 4px;
+        text-align: center;
+    }
 </style>
 
 <div class="dir-board">
@@ -214,8 +490,9 @@
 
         <div class="dir-summary-card">
             <div>
-                <div class="dir-summary-title">Текущий период</div>
+                <div class="dir-summary-title">Активный период в системе</div>
                 <div class="dir-summary-value">{{ director_current_period_name|default:"—" }}</div>
+                <div class="dir-summary-filter-note">В отчёте и на графиках: <strong>{{ director_report_period_label }}</strong></div>
             </div>
         </div>
     </div>
@@ -224,36 +501,37 @@
         <div>
             <div class="dir-graph-block">
                 <div class="dir-graph-title">Статистика отделений по сумме баллов</div>
-                <canvas id="dirDeptBarChart" height="160"></canvas>
+                <div id="dir-bar-chart-wrap" class="dir-chart-wrap">
+                    <canvas id="dirDeptBarChart" height="160"></canvas>
+                    <div class="dir-chart-empty">Нет данных по выбранным фильтрам</div>
+                </div>
             </div>
 
             <div class="dir-graph-block">
                 <div class="dir-graph-title">Динамика отделений</div>
-                <canvas id="dirDeptLineChart" height="160"></canvas>
+                <div id="dir-line-chart-wrap" class="dir-chart-wrap">
+                    <canvas id="dirDeptLineChart" height="160"></canvas>
+                    <div class="dir-chart-empty">Нет данных по выбранным фильтрам</div>
+                </div>
             </div>
         </div>
 
         <div class="dir-sidebar">
-            <div class="dir-card-right">
-                <div class="dir-card-title">Расчет суммы</div>
+            <form id="dir-director-filter-form" class="dir-filter-card" method="get">
+                <div class="dir-card-title mb-2">Расчет суммы</div>
+                <label class="dir-field-label">Объем средств на оплату эффективного контракта</label>
+                <input type="number" name="budget" class="dir-input" placeholder="Введите сумму"
+                       value="{{ budget_value }}" step="any">
 
-                <form method="get">
-                    <label class="dir-field-label">Объем средств на оплату эффективного контракта</label>
-                    <input type="number" name="budget" class="dir-input" placeholder="Введите сумму"
-                           value="{{ budget_value }}">
+                <label class="dir-field-label">Цена одного балла</label>
+                <input type="text" class="dir-input" placeholder="Рассчитывается автоматически"
+                       value="{% if point_price %}{{ point_price|dir_money:4 }}{% endif %}" readonly>
 
-                    <label class="dir-field-label">Цена одного балла</label>
-                    <input type="text" class="dir-input" placeholder="Рассчитывается автоматически"
-                           value="{% if point_price %}{{ point_price }}{% endif %}" readonly>
+                <div class="dir-btn-row mb-3">
+                    <button type="submit" class="dir-btn-reset" name="reset" value="1">Сбросить бюджет</button>
+                    <button type="submit" class="dir-btn-apply">Принять</button>
+                </div>
 
-                    <div class="dir-btn-row">
-                        <button type="submit" class="dir-btn-reset" name="reset" value="1">Сбросить</button>
-                        <button type="submit" class="dir-btn-apply">Принять</button>
-                    </div>
-                </form>
-            </div>
-
-            <form class="dir-filter-card" method="get">
                 <div class="dir-filter-title">Формирование отчета</div>
 
                 <div class="dir-filter-group">
@@ -278,13 +556,116 @@
                 </div>
 
                 <button type="submit" class="dir-btn-report">Обновить данные</button>
-                <button type="submit"
-                        class="dir-btn-report mt-2"
-                        formaction="{% url 'director_export' %}"
-                        formmethod="get">
+                <button type="button" class="dir-btn-report mt-2" id="dir-open-report-preview">
                     Сформировать отчет (XLSX)
                 </button>
             </form>
+            <input type="hidden" id="dir-preview-sync-query" value="{{ preview_sync_query }}">
+        </div>
+    </div>
+
+    <div id="dir-report-preview-overlay"
+         class="dir-preview-overlay"
+         aria-hidden="true"
+         role="presentation">
+        <div class="dir-preview-backdrop" data-dir-preview-close tabindex="-1" aria-hidden="true"></div>
+        <div class="dir-preview-modal" role="dialog" aria-modal="true" aria-labelledby="dir-preview-title">
+            <div class="dir-preview-modal-head">
+                <h2 class="dir-preview-title" id="dir-preview-title">Предпросмотр отчёта</h2>
+                <p class="dir-preview-hint">
+                    Проверьте данные. Файл Excel будет сформирован с учётом полей формы слева. Если меняли фильтры или бюджет — сначала нажмите «Обновить данные», чтобы предпросмотр и графики совпали с файлом.
+                </p>
+                <div id="dir-preview-stale" class="dir-preview-stale" role="status">
+                    Поля формы не совпадают с последним обновлением страницы: предпросмотр устарел. Нажмите «Обновить данные» или скачивайте Excel осознанно — в файле будут <strong>текущие</strong> значения из формы.
+                </div>
+            </div>
+            <div class="dir-preview-scroll">
+                <div class="dir-preview-layout">
+                    <div class="dir-preview-col-table">
+                        {% if report_preview.itog_rows %}
+                            <div class="dir-preview-meta">
+                                {% if report_preview.budget_value != None %}
+                                    <span>Премиальный фонд: <strong>{{ report_preview.budget_value|dir_money:2 }}</strong></span>
+                                {% endif %}
+                                {% if report_preview.point_price != None %}
+                                    <span>Цена 1 балла: <strong>{{ report_preview.point_price|dir_money:4 }}</strong></span>
+                                {% endif %}
+                            </div>
+                            <table class="dir-preview-itog">
+                                <thead>
+                                    <tr>
+                                        <th class="num">№</th>
+                                        <th>ФИО</th>
+                                        <th class="ball">Балл</th>
+                                        <th class="ball">Премия</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in report_preview.itog_rows %}
+                                        <tr data-teacher-idx="{{ row.idx }}">
+                                            <td class="num">{{ row.idx }}</td>
+                                            <td>{{ row.fio }}</td>
+                                            <td class="ball">{{ row.balls|floatformat:3 }}</td>
+                                            <td class="ball">{% if row.prem != None %}{{ row.prem|dir_money:2 }}{% else %}—{% endif %}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="2">Итого</td>
+                                        <td class="ball">{{ report_preview.total_score_sum|floatformat:3 }}</td>
+                                        <td class="ball">
+                                            {% if report_preview.total_prem != None %}
+                                                {{ report_preview.total_prem|dir_money:2 }}
+                                            {% else %}
+                                                —
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        {% else %}
+                            <div class="dir-preview-empty">Нет записей по выбранным фильтрам — в отчёте будет пустой лист «ИТОГ».</div>
+                        {% endif %}
+                    </div>
+                    <div class="dir-preview-col-teachers">
+                        {% if report_preview.teachers %}
+                            <div class="dir-preview-teachers-heading">Детализация по преподавателям</div>
+                        {% endif %}
+                        {% for t in report_preview.teachers %}
+                            <details class="dir-preview-teacher" id="dir-preview-teacher-{{ forloop.counter }}">
+                                <summary>
+                                    <span>{{ t.fio }}</span>
+                                    <span style="font-weight:600;">{{ t.total_balls|floatformat:3 }}</span>
+                                </summary>
+                                <div class="dir-preview-teacher-body">
+                                    {% for block in t.blocks %}
+                                        <div class="dir-preview-ach">
+                                            <div class="dir-preview-ach-head">
+                                                <span>{{ block.criterion_label }} — баллы</span>
+                                                <span>{{ block.score|floatformat:3 }}</span>
+                                            </div>
+                                            {% for f in block.fields %}
+                                                <div class="dir-preview-field">{{ f.caption }}: {{ f.value }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% empty %}
+                                        <div class="dir-preview-empty" style="padding:8px;">Нет достижений.</div>
+                                    {% endfor %}
+                                </div>
+                            </details>
+                        {% empty %}
+                            {% if report_preview.itog_rows %}
+                                <div class="dir-preview-empty" style="padding:12px 8px;text-align:left;">Нет блоков детализации.</div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="dir-preview-actions">
+                <button type="button" class="dir-btn-reset" data-dir-preview-close>Отмена</button>
+                <button type="button" class="dir-btn-apply" id="dir-preview-confirm-download">Скачать Excel</button>
+            </div>
         </div>
     </div>
 </div>
@@ -296,57 +677,172 @@
         const data = JSON.parse(rawData.textContent);
         const barCanvas = document.getElementById('dirDeptBarChart');
         const lineCanvas = document.getElementById('dirDeptLineChart');
+        const barWrap = document.getElementById('dir-bar-chart-wrap');
+        const lineWrap = document.getElementById('dir-line-chart-wrap');
         if (!barCanvas || !lineCanvas) return;
 
-        const barCtx = barCanvas.getContext('2d');
-        const lineCtx = lineCanvas.getContext('2d');
-
-        new Chart(barCtx, {
-            type: 'bar',
-            data: {
-                labels: data.bar.labels,
-                datasets: [{
-                    label: 'Сумма баллов',
-                    data: data.bar.values,
-                    backgroundColor: '#4f46e5',
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true }
+        const barEmpty = !data.bar.labels.length
+            || !data.bar.values.length
+            || data.bar.values.every(function (v) { return Number(v) === 0; });
+        if (barWrap) barWrap.classList.toggle('is-empty', barEmpty);
+        if (!barEmpty) {
+            new Chart(barCanvas.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: data.bar.labels,
+                    datasets: [{
+                        label: 'Сумма баллов',
+                        data: data.bar.values,
+                        backgroundColor: '#4f46e5',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
                 }
+            });
+        }
+
+        const series = data.line.series || {};
+        const lineLabels = data.line.labels || [];
+        const lineEmpty = !lineLabels.length
+            || !Object.keys(series).length
+            || Object.values(series).every(function (arr) {
+                return !arr.length || arr.every(function (v) { return Number(v) === 0; });
+            });
+        if (lineWrap) lineWrap.classList.toggle('is-empty', lineEmpty);
+        if (!lineEmpty) {
+            const colors = ['#ef4444', '#22c55e', '#3b82f6', '#eab308', '#a855f7'];
+            const lineDatasets = [];
+            let i = 0;
+            for (const [dept, values] of Object.entries(series)) {
+                lineDatasets.push({
+                    label: dept,
+                    data: values,
+                    borderColor: colors[i % colors.length],
+                    tension: 0.4
+                });
+                i++;
+            }
+            new Chart(lineCanvas.getContext('2d'), {
+                type: 'line',
+                data: { labels: lineLabels, datasets: lineDatasets },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+    })();
+
+    (function () {
+        const overlay = document.getElementById('dir-report-preview-overlay');
+        const openBtn = document.getElementById('dir-open-report-preview');
+        const form = document.getElementById('dir-director-filter-form');
+        const confirmBtn = document.getElementById('dir-preview-confirm-download');
+        const syncInput = document.getElementById('dir-preview-sync-query');
+        const staleEl = document.getElementById('dir-preview-stale');
+        const exportBase = '{% url "director_export" %}';
+        const modal = overlay ? overlay.querySelector('.dir-preview-modal') : null;
+        const FOCUSABLE = 'button:not([disabled]), a[href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
+
+        if (!overlay || !openBtn || !form || !confirmBtn || !modal) return;
+
+        function canonicalQueryFromForm() {
+            const fd = new FormData(form);
+            const keys = ['period', 'department', 'work', 'budget'];
+            const pairs = keys.map(function (k) {
+                const v = fd.get(k);
+                return [k, v == null ? '' : String(v)];
+            });
+            return new URLSearchParams(pairs).toString();
+        }
+
+        function getFocusable() {
+            return Array.from(modal.querySelectorAll(FOCUSABLE)).filter(function (el) {
+                return el.offsetParent !== null || el.getClientRects().length > 0;
+            });
+        }
+
+        let trapHandler = null;
+
+        function openPreview() {
+            const pageQ = syncInput ? syncInput.value : '';
+            const formQ = canonicalQueryFromForm();
+            if (staleEl) staleEl.classList.toggle('is-visible', pageQ !== formQ);
+
+            overlay.classList.add('is-open');
+            overlay.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+            confirmBtn.focus();
+
+            trapHandler = function (e) {
+                if (e.key !== 'Tab' || !overlay.classList.contains('is-open')) return;
+                const list = getFocusable();
+                if (!list.length) return;
+                const first = list[0];
+                const last = list[list.length - 1];
+                if (e.shiftKey) {
+                    if (document.activeElement === first) {
+                        e.preventDefault();
+                        last.focus();
+                    }
+                } else if (document.activeElement === last) {
+                    e.preventDefault();
+                    first.focus();
+                }
+            };
+            document.addEventListener('keydown', trapHandler, true);
+        }
+
+        function closePreview() {
+            overlay.classList.remove('is-open');
+            overlay.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+            if (trapHandler) {
+                document.removeEventListener('keydown', trapHandler, true);
+                trapHandler = null;
+            }
+            document.querySelectorAll('.dir-preview-teacher--hl').forEach(function (el) {
+                el.classList.remove('dir-preview-teacher--hl');
+            });
+            openBtn.focus();
+        }
+
+        openBtn.addEventListener('click', openPreview);
+        overlay.querySelectorAll('[data-dir-preview-close]').forEach(function (el) {
+            el.addEventListener('click', closePreview);
+        });
+
+        confirmBtn.addEventListener('click', function () {
+            const params = new URLSearchParams(new FormData(form));
+            const q = params.toString();
+            window.location.href = exportBase + (q ? '?' + q : '');
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && overlay.classList.contains('is-open')) {
+                e.preventDefault();
+                closePreview();
             }
         });
 
-        const colors = ['#ef4444', '#22c55e', '#3b82f6', '#eab308', '#a855f7'];
-        const lineDatasets = [];
-        let i = 0;
-        for (const [dept, values] of Object.entries(data.line.series)) {
-            lineDatasets.push({
-                label: dept,
-                data: values,
-                borderColor: colors[i % colors.length],
-                tension: 0.4
+        const teachersCol = overlay.querySelector('.dir-preview-col-teachers');
+        overlay.querySelectorAll('.dir-preview-itog tbody tr[data-teacher-idx]').forEach(function (tr) {
+            tr.addEventListener('click', function () {
+                const idx = tr.getAttribute('data-teacher-idx');
+                const det = document.getElementById('dir-preview-teacher-' + idx);
+                if (!det || !teachersCol) return;
+                overlay.querySelectorAll('.dir-preview-teacher--hl').forEach(function (el) {
+                    el.classList.remove('dir-preview-teacher--hl');
+                });
+                det.classList.add('dir-preview-teacher--hl');
+                det.open = true;
+                det.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             });
-            i++;
-        }
-
-        new Chart(lineCtx, {
-            type: 'line',
-            data: {
-                labels: data.line.labels,
-                datasets: lineDatasets
-            },
-            options: {
-                responsive: true,
-                plugins: { legend: { position: 'bottom' } },
-                scales: {
-                    y: { beginAtZero: true }
-                }
-            }
         });
     })();
 </script>

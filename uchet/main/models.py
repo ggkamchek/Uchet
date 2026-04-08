@@ -93,6 +93,7 @@ class Criterion(models.Model):
         db_column='WorksID',
         related_name='criterions'
     )
+    ratio = models.FloatField(default=1.0, db_column='Ratio', verbose_name='Коэффициент')
 
     class Meta:
         db_table = 'criterions'
@@ -174,15 +175,35 @@ class Achievement(models.Model):
     )
     def total_score(self):
         total = 0
+        # Собираем уникальные критерии из всех полей достижения
+        unique_criteria = set()
+        
         for field_value in self.field_values.all():
             field = field_value.field
+            unique_criteria.add(field.criterion)
+            
             if field.type == 'chooser':
                 try:
                     level_id = int(field_value.value)
                     level = Level.objects.get(pk=level_id, field=field)
-                    total += level.ratio
+                    # Складываем уровень и коэффициент критерия
+                    total += level.ratio + field.criterion.ratio
                 except (ValueError, Level.DoesNotExist):
                     pass
+        
+        # Добавляем баллы за критерии, у которых нет chooser полей
+        for criterion in unique_criteria:
+            # Проверяем, есть ли у этого критерия хотя бы одно chooser поле в достижении
+            has_chooser = False
+            for field_value in self.field_values.all():
+                if field_value.field.criterion == criterion and field_value.field.type == 'chooser':
+                    has_chooser = True
+                    break
+            
+            # Если нет chooser полей, начисляем только коэффициент критерия
+            if not has_chooser:
+                total += criterion.ratio
+        
         return total
 
     class Meta:

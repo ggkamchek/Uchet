@@ -43,6 +43,7 @@ urlpatterns = [
     path('periods/<int:pk>/edit/', views.PeriodUpdateView.as_view(), name='period_update'),
     path('periods/<int:pk>/delete/', views.PeriodDeleteView.as_view(), name='period_delete'),
     path('users/create/', views.user_create_page, name='user_create'),
+    path('users/<int:pk>/delete/', views.UserDeleteView.as_view(), name='user_delete'),
 
     path('teacher/', views.teacher_dashboard, name='teacher_dashboard'),
     path('teacher/achievements/create/', views.teacher_achievement_create_page, name='teacher_achievement_create'),
