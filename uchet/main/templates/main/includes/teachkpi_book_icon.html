@@ -1,0 +1,68 @@
+{% comment %}
+  Книга TeachKPI — один экземпляр на страницу должен иметь свой book_uid (id градиентов/фильтра).
+{% endcomment %}
+<svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" focusable="false" aria-hidden="true">
+    <defs>
+        <filter id="tkpiSoftBlur_{{ book_uid }}" x="-25%" y="-25%" width="150%" height="150%">
+            <feGaussianBlur stdDeviation="0.55"/>
+        </filter>
+        <linearGradient id="tkpiPageLeft_{{ book_uid }}" x1="0%" y1="22%" x2="100%" y2="78%">
+            <stop offset="0%" stop-color="#e6e6e6"/>
+            <stop offset="12%" stop-color="#f5f5f5"/>
+            <stop offset="38%" stop-color="#ffffff"/>
+            <stop offset="58%" stop-color="#fafafa"/>
+            <stop offset="78%" stop-color="#dedede"/>
+            <stop offset="100%" stop-color="#bcbcbc"/>
+        </linearGradient>
+        <linearGradient id="tkpiPageRight_{{ book_uid }}" x1="100%" y1="22%" x2="0%" y2="78%">
+            <stop offset="0%" stop-color="#e6e6e6"/>
+            <stop offset="12%" stop-color="#f5f5f5"/>
+            <stop offset="38%" stop-color="#ffffff"/>
+            <stop offset="58%" stop-color="#fafafa"/>
+            <stop offset="78%" stop-color="#dedede"/>
+            <stop offset="100%" stop-color="#bcbcbc"/>
+        </linearGradient>
+    </defs>
+    <rect x="12" y="12" width="104" height="92" rx="16" fill="#d9d9d9" stroke="#1a1a1a" stroke-width="2.4"/>
+    <path d="M26 32
+             Q26 24 34 24
+             H56
+             Q62 24 64 30
+             Q66 24 72 24
+             H94
+             Q102 24 102 32
+             V80
+             Q102 88 94 88
+             H72
+             Q66 88 64 94
+             Q62 88 56 88
+             H34
+             Q26 88 26 80 Z"
+          fill="#000000" opacity="0.16" filter="url(#tkpiSoftBlur_{{ book_uid }})"/>
+    <path d="M24 30
+             Q24 22 32 22
+             H56
+             Q62 22 64 28
+             V80
+             Q62 86 56 86
+             H32
+             Q24 86 24 78 Z"
+          fill="url(#tkpiPageLeft_{{ book_uid }})"
+          stroke="#1f1f1f"
+          stroke-width="3.2"
+          stroke-linejoin="round"/>
+    <path d="M104 30
+             Q104 22 96 22
+             H72
+             Q66 22 64 28
+             V80
+             Q66 86 72 86
+             H96
+             Q104 86 104 78 Z"
+          fill="url(#tkpiPageRight_{{ book_uid }})"
+          stroke="#1f1f1f"
+          stroke-width="3.2"
+          stroke-linejoin="round"/>
+    <path d="M64 28 V88" stroke="#1f1f1f" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M61 86 Q64 92 67 86" fill="none" stroke="#1f1f1f" stroke-width="3.2" stroke-linecap="round"/>
+</svg>

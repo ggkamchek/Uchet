@@ -54,11 +54,36 @@
             justify-content: space-between;
             gap: 16px;
         }
-        .teacher-app-name {
+        .teacher-app-brand {
             font-size: 1.65rem;
             font-weight: 600;
             color: #111827;
-            line-height: 1.1;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3em;
+            white-space: nowrap;
+        }
+        .teacher-app-brand:hover {
+            color: #111827;
+        }
+        .teacher-app-brand > span:last-child {
+            line-height: 1;
+            display: inline-block;
+        }
+        .tkpi-book-inline-wrap {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            height: 1.48em;
+            line-height: 0;
+            transform: translateY(0.2em);
+        }
+        .tkpi-book-inline-wrap svg {
+            height: 100%;
+            width: auto;
+            display: block;
         }
         .teacher-user {
             display: flex;
@@ -91,8 +116,11 @@
 <body>
     <header class="teacher-topbar">
         <div class="teacher-topbar-inner">
-            <a href="{% url 'teacher_dashboard' %}" class="text-decoration-none">
-                <div class="teacher-app-name">TeachKPI</div>
+            <a href="{% url 'teacher_dashboard' %}" class="teacher-app-brand text-decoration-none">
+                <span class="tkpi-book-inline-wrap" aria-hidden="true">
+                    {% include 'main/includes/teachkpi_book_icon.html' with book_uid='teacher' %}
+                </span>
+                <span>TeachKPI</span>
             </a>
 
             <div class="teacher-user">

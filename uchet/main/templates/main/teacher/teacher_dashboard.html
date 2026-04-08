@@ -51,7 +51,12 @@
 
     .ach-table {
         margin: 0;
-        table-layout: fixed;
+        table-layout: auto;
+    }
+    .ach-table th:last-child,
+    .ach-table td:last-child {
+        width: 1%;
+        white-space: nowrap;
     }
 
     .ach-table thead th {
@@ -206,7 +211,7 @@
                         <tr>
                             <th style="min-width: 160px;">
                                 <span class="ach-th-icon"><i class="bi bi-search"></i></span>
-                                <span class="ach-th-text">Name</span>
+                                <span class="ach-th-text">Работа</span>
                             </th>
                             <th style="min-width: 160px;">
                                 <span class="ach-th-icon"><i class="bi bi-funnel"></i></span>
@@ -224,9 +229,9 @@
                                 <span class="ach-th-icon"><i class="bi bi-calculator"></i></span>
                                 <span class="ach-th-text">Расчет</span>
                             </th>
-                            <th class="text-end" style="min-width: 120px;">
-                                <span class="ach-th-icon"><i class="bi bi-arrow-down-up"></i></span>
-                                <span class="ach-th-text">Status</span>
+                            <th class="text-end" style="width:1%;">
+                                <span class="ach-th-icon"><i class="bi bi-three-dots-vertical"></i></span>
+                                <span class="ach-th-text">Действия</span>
                             </th>
                         </tr>
                     </thead>
@@ -281,7 +286,7 @@
                 emptyTable: 'У вас пока нет достижений. Нажмите +, чтобы добавить первое.'
                 },
                 columnDefs: [
-                    { targets: -1, orderable: false, className: 'text-end' } // столбец Status не сортируем, выравниваем вправо
+                    { targets: -1, orderable: false, className: 'text-end text-nowrap', width: '1%' } // столбец «Действия» без сортировки
                 ]
             });
         });

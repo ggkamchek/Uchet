@@ -1,144 +1,202 @@
 {% extends 'main/base_dashboard.html' %}
 
 {% block content %}
+<style>
+    /* Длинные подписи в карточках главной: не разъезжают flex и не вылезают из колонки */
+    .dash-home-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem 0.75rem;
+        flex-wrap: wrap;
+    }
+    .dash-home-row__main {
+        flex: 1 1 12rem;
+        min-width: 0;
+    }
+    .dash-home-row__main a {
+        word-break: break-word;
+    }
+    .dash-home-row__actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-shrink: 0;
+        margin-left: auto;
+    }
+    .dash-home-row .badge-muted {
+        max-width: 14rem;
+        white-space: normal;
+        text-align: left;
+        line-height: 1.25;
+        word-break: break-word;
+    }
+    .dash-home-stack .card:not(:last-child) {
+        margin-bottom: 1.5rem;
+    }
+</style>
 <div class="row">
-    <!-- Работы -->
+    <!-- Левая колонка: работы → поля → периоды (выше на странице, без «третьего ряда») -->
     <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Работы</h5>
-                <a href="{% url 'work_create' %}" class="btn btn-sm btn-icon-outline">
-                    <i class="bi bi-plus-lg"></i> Добавить работу
-                </a>
+        <div class="dash-home-stack">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Работы</h5>
+                    <a href="{% url 'work_create' %}" class="btn btn-sm btn-icon-outline">
+                        <i class="bi bi-plus-lg"></i> Добавить работу
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if latest_works %}
+                        <ul class="list-group">
+                            {% for work in latest_works %}
+                                <li class="list-group-item py-2">
+                                    <div class="dash-home-row">
+                                        <div class="dash-home-row__main">
+                                            <a href="{% url 'work_detail' work.pk %}">{{ work.name }}</a>
+                                        </div>
+                                        <div class="dash-home-row__actions">
+                                            <a href="{% url 'criterion_create' %}?work={{ work.pk }}" class="btn btn-sm btn-icon-outline">
+                                                <i class="bi bi-plus-lg"></i> Критерий
+                                            </a>
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">Нет работ. <a href="{% url 'work_create' %}">Создайте первую</a>.</p>
+                    {% endif %}
+                </div>
             </div>
-            <div class="card-body">
-                {% if latest_works %}
-                    <ul class="list-group">
-                        {% for work in latest_works %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <a href="{% url 'work_detail' work.pk %}">{{ work.name }}</a>
-                                <a href="{% url 'criterion_create' %}?work={{ work.pk }}" class="btn btn-sm btn-icon-outline">
-                                    <i class="bi bi-plus-lg"></i> Критерий
-                                </a>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <p class="text-muted">Нет работ. <a href="{% url 'work_create' %}">Создайте первую</a>.</p>
-                {% endif %}
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Поля</h5>
+                    <a href="{% url 'field_create' %}" class="btn btn-sm btn-icon-outline">
+                        <i class="bi bi-plus-lg"></i> Добавить поле
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if latest_fields %}
+                        <ul class="list-group">
+                            {% for field in latest_fields %}
+                                <li class="list-group-item py-2">
+                                    <div class="dash-home-row">
+                                        <div class="dash-home-row__main">
+                                            <a href="{% url 'field_detail' field.pk %}">{{ field.caption }}</a>
+                                        </div>
+                                        <div class="dash-home-row__actions">
+                                            <span class="badge badge-muted">{{ field.criterion.name }}</span>
+                                            <a href="{% url 'level_create' %}?field={{ field.pk }}" class="btn btn-sm btn-icon-outline">
+                                                <i class="bi bi-plus-lg"></i> Уровень
+                                            </a>
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">Нет полей.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Периоды</h5>
+                    <a href="{% url 'period_create' %}" class="btn btn-sm btn-icon-outline">
+                        <i class="bi bi-plus-lg"></i> Добавить период
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if latest_periods %}
+                        <ul class="list-group">
+                            {% for period in latest_periods %}
+                                <li class="list-group-item py-2">
+                                    <div class="dash-home-row">
+                                        <div class="dash-home-row__main">
+                                            <a href="{% url 'period_detail' period.pk %}">{{ period.name }}</a>
+                                        </div>
+                                        <div class="dash-home-row__actions">
+                                            <span class="badge {% if period.status %}badge-active-period{% else %}badge-muted{% endif %}">
+                                                {{ period.status|yesno:"Активен,Неактивен" }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">Нет периодов.</p>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Критерии -->
+    <!-- Правая колонка: критерии → уровни -->
     <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Критерии</h5>
-                <a href="{% url 'criterion_create' %}" class="btn btn-sm btn-icon-outline">
-                    <i class="bi bi-plus-lg"></i> Добавить критерий
-                </a>
+        <div class="dash-home-stack">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Критерии</h5>
+                    <a href="{% url 'criterion_create' %}" class="btn btn-sm btn-icon-outline">
+                        <i class="bi bi-plus-lg"></i> Добавить критерий
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if latest_criterions %}
+                        <ul class="list-group">
+                            {% for criterion in latest_criterions %}
+                                <li class="list-group-item py-2">
+                                    <div class="dash-home-row">
+                                        <div class="dash-home-row__main">
+                                            <a href="{% url 'criterion_detail' criterion.pk %}">{{ criterion.name }}</a>
+                                        </div>
+                                        <div class="dash-home-row__actions">
+                                            <span class="badge badge-muted">{{ criterion.work.name }}</span>
+                                            <a href="{% url 'field_create' %}?criterion={{ criterion.pk }}" class="btn btn-sm btn-icon-outline">
+                                                <i class="bi bi-plus-lg"></i> Поле
+                                            </a>
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">Нет критериев.</p>
+                    {% endif %}
+                </div>
             </div>
-            <div class="card-body">
-                {% if latest_criterions %}
-                    <ul class="list-group">
-                        {% for criterion in latest_criterions %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <a href="{% url 'criterion_detail' criterion.pk %}">{{ criterion.name }}</a>
-                                <span class="badge badge-muted">{{ criterion.work.name }}</span>
-                                <a href="{% url 'field_create' %}?criterion={{ criterion.pk }}" class="btn btn-sm btn-icon-outline">
-                                    <i class="bi bi-plus-lg"></i> Поле
-                                </a>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <p class="text-muted">Нет критериев.</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
 
-    <!-- Поля -->
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Поля</h5>
-                <a href="{% url 'field_create' %}" class="btn btn-sm btn-icon-outline">
-                    <i class="bi bi-plus-lg"></i> Добавить поле
-                </a>
-            </div>
-            <div class="card-body">
-                {% if latest_fields %}
-                    <ul class="list-group">
-                        {% for field in latest_fields %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <a href="{% url 'field_detail' field.pk %}">{{ field.caption }}</a>
-                                <span class="badge badge-muted">{{ field.criterion.name }}</span>
-                                <a href="{% url 'level_create' %}?field={{ field.pk }}" class="btn btn-sm btn-icon-outline">
-                                    <i class="bi bi-plus-lg"></i> Уровень
-                                </a>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <p class="text-muted">Нет полей.</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-
-    <!-- Уровни -->
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Уровни</h5>
-                <a href="{% url 'level_create' %}" class="btn btn-sm btn-icon-outline">
-                    <i class="bi bi-plus-lg"></i> Добавить уровень
-                </a>
-            </div>
-            <div class="card-body">
-                {% if latest_levels %}
-                    <ul class="list-group">
-                        {% for level in latest_levels %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <a href="{% url 'level_detail' level.pk %}">{{ level.caption }}</a>
-                                <span class="badge badge-muted">{{ level.field.caption }}</span>
-                                <span class="text-muted">Коэф: {{ level.ratio }}</span>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <p class="text-muted">Нет уровней.</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-
-    <!-- Периоды -->
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Периоды</h5>
-                <a href="{% url 'period_create' %}" class="btn btn-sm btn-icon-outline">
-                    <i class="bi bi-plus-lg"></i> Добавить период
-                </a>
-            </div>
-            <div class="card-body">
-                {% if latest_periods %}
-                    <ul class="list-group">
-                        {% for period in latest_periods %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <a href="{% url 'period_detail' period.pk %}">{{ period.name }}</a>
-                                <span class="badge {% if period.status %}badge-active-period{% else %}badge-muted{% endif %}">
-                                    {{ period.status|yesno:"Активен,Неактивен" }}
-                                </span>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <p class="text-muted">Нет периодов.</p>
-                {% endif %}
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Уровни</h5>
+                    <a href="{% url 'level_create' %}" class="btn btn-sm btn-icon-outline">
+                        <i class="bi bi-plus-lg"></i> Добавить уровень
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if latest_levels %}
+                        <ul class="list-group">
+                            {% for level in latest_levels %}
+                                <li class="list-group-item py-2">
+                                    <div class="dash-home-row">
+                                        <div class="dash-home-row__main">
+                                            <a href="{% url 'level_detail' level.pk %}">{{ level.caption }}</a>
+                                        </div>
+                                        <div class="dash-home-row__actions">
+                                            <span class="badge badge-muted">{{ level.field.caption }}</span>
+                                            <span class="text-muted text-nowrap small">Коэф: {{ level.ratio }}</span>
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">Нет уровней.</p>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>

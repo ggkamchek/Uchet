@@ -86,12 +86,18 @@ class Period(models.Model):
 # ---------- Модель Criterion (таблица criterions) ----------
 class Criterion(models.Model):
     id = models.AutoField(primary_key=True, db_column='ID')
-    name = models.CharField(max_length=255, unique=True, db_column='Name')
+    name = models.CharField(
+        max_length=255,
+        unique=True,
+        db_column='Name',
+        verbose_name='Название',
+    )
     work = models.ForeignKey(
         Work,
         on_delete=models.CASCADE,
         db_column='WorksID',
-        related_name='criterions'
+        related_name='criterions',
+        verbose_name='Работа',
     )
     ratio = models.FloatField(default=1.0, db_column='Ratio', verbose_name='Коэффициент')
 

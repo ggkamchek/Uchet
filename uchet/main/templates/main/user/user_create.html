@@ -45,6 +45,41 @@
             grid-template-columns: 1fr;
         }
     }
+    .user-list-details {
+        border-top: 1px solid #e5e7eb;
+        padding-top: 12px;
+        margin-top: 8px;
+    }
+    .user-list-details > summary {
+        list-style: none;
+        cursor: pointer;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #111827;
+        padding: 6px 0 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        user-select: none;
+    }
+    .user-list-details > summary::-webkit-details-marker {
+        display: none;
+    }
+    .user-list-details > summary::before {
+        content: '▸';
+        display: inline-block;
+        font-size: 0.85rem;
+        color: #6b7280;
+        transition: transform 0.15s ease;
+    }
+    .user-list-details[open] > summary::before {
+        transform: rotate(90deg);
+    }
+    .user-list-details .summary-hint {
+        font-size: 0.85rem;
+        font-weight: 400;
+        color: #6b7280;
+    }
 </style>
 
 <div class="card user-create-card">
@@ -115,41 +150,50 @@
             </div>
         </form>
 
-        <h5 class="mb-2">Созданные пользователи</h5>
-        <div class="table-responsive">
-            <table class="table table-striped align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Логин</th>
-                        <th>ФИО</th>
-                        <th>Роль</th>
-                        <th>Отделение</th>
-                        <th class="text-end" style="width:1%"><span class="visually-hidden">Действия</span></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for u in users %}
-                        <tr>
-                            <td>{{ u.id }}</td>
-                            <td>{{ u.username }}</td>
-                            <td>{% if u.last_name or u.first_name or u.patronymic %}{{ u.last_name }} {{ u.first_name }} {{ u.patronymic }}{% else %}—{% endif %}</td>
-                            <td>{{ u.get_role_display }}</td>
-                            <td>{% if u.department %}{{ u.department }}{% else %}—{% endif %}</td>
-                            <td class="text-end text-nowrap">
-                                {% if u.id != request.user.id %}
-                                <a href="{% url 'user_delete' u.id %}" class="btn btn-sm btn-danger">Удалить</a>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="6">Пользователей пока нет.</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+        <details class="user-list-details">
+            <summary>
+                Созданные пользователи
+                <span class="summary-hint">нажмите, чтобы развернуть</span>
+            </summary>
+            <div class="pt-1">
+                <label for="user-surname-filter" class="form-label small text-muted mb-1">Поиск по фамилии</label>
+                <input type="search" id="user-surname-filter" class="form-control form-control-sm mb-3" placeholder="Начните вводить фамилию…" autocomplete="off" disabled>
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Логин</th>
+                                <th>ФИО</th>
+                                <th>Роль</th>
+                                <th>Отделение</th>
+                                <th class="text-end" style="width:1%"><span class="visually-hidden">Действия</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-list-tbody">
+                            {% for u in users %}
+                                <tr data-surname="{{ u.last_name|default:''|lower }}">
+                                    <td>{{ u.id }}</td>
+                                    <td>{{ u.username }}</td>
+                                    <td>{% if u.last_name or u.first_name or u.patronymic %}{{ u.last_name }} {{ u.first_name }} {{ u.patronymic }}{% else %}—{% endif %}</td>
+                                    <td>{{ u.get_role_display }}</td>
+                                    <td>{% if u.department %}{{ u.department }}{% else %}—{% endif %}</td>
+                                    <td class="text-end text-nowrap">
+                                        {% if u.id != request.user.id %}
+                                        <a href="{% url 'user_delete' u.id %}" class="btn btn-sm btn-danger">Удалить</a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr id="user-list-empty-row">
+                                    <td colspan="6">Пользователей пока нет.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </details>
     </div>
 </div>
 <script>
@@ -163,6 +207,31 @@
     }
     role.addEventListener('change', sync);
     sync();
+})();
+
+(function () {
+    var details = document.querySelector('.user-list-details');
+    var input = document.getElementById('user-surname-filter');
+    var tbody = document.getElementById('user-list-tbody');
+    if (!details || !input || !tbody) return;
+
+    function applyFilter() {
+        var q = (input.value || '').trim().toLowerCase();
+        var rows = tbody.querySelectorAll('tr[data-surname]');
+        rows.forEach(function (tr) {
+            var s = tr.getAttribute('data-surname') || '';
+            tr.style.display = !q || s.indexOf(q) !== -1 ? '' : 'none';
+        });
+    }
+
+    details.addEventListener('toggle', function () {
+        input.disabled = !details.open;
+    });
+
+    input.addEventListener('input', applyFilter);
+    input.addEventListener('search', function () {
+        if (!input.value) applyFilter();
+    });
 })();
 </script>
 {% endblock %}
