@@ -7,11 +7,13 @@ SECRET_KEY = 'django-insecure--d(ij$)%)lync8o40h1ap%j^m-1(m)kqc4-&jdxz-a8fb^*=5#
 
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    host.strip()
-    for host in os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
-    if host.strip()
-]
+_allowed_raw = os.environ.get('DJANGO_ALLOWED_HOSTS', '').strip()
+if _allowed_raw:
+    ALLOWED_HOSTS = [h.strip() for h in _allowed_raw.split(',') if h.strip()]
+elif DEBUG:
+    ALLOWED_HOSTS = ['*']
+else:
+    ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
