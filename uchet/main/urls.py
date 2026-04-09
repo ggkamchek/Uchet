@@ -1,14 +1,9 @@
-# main/urls.py
-
-from django.urls import path, include
+from django.urls import path
 from . import views
 from django.contrib.auth import views as auth_views
 
-
 urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(next_page='/'), name='logout'),
-
-    path('accounts/', include('django.contrib.auth.urls')),
 
     path('', views.dashboard_home, name='dashboard_home'),
 
@@ -23,7 +18,7 @@ urlpatterns = [
     path('criterions/<int:pk>/', views.CriterionDetailView.as_view(), name='criterion_detail'),
     path('criterions/<int:pk>/edit/', views.CriterionUpdateView.as_view(), name='criterion_update'),
     path('criterions/<int:pk>/delete/', views.CriterionDeleteView.as_view(), name='criterion_delete'),
-    
+
     path('fields/<int:pk>/', views.FieldDetailView.as_view(), name='field_detail'),
     path('fields/<int:pk>/delete/', views.FieldDeleteView.as_view(), name='field_delete'),
     path('fields/create/', views.FieldCreateView.as_view(), name='field_create'),
@@ -35,7 +30,6 @@ urlpatterns = [
     path('levels/<int:pk>/', views.LevelDetailView.as_view(), name='level_detail'),
     path('levels/<int:pk>/edit/', views.LevelUpdateView.as_view(), name='level_update'),
     path('levels/<int:pk>/delete/', views.LevelDeleteView.as_view(), name='level_delete'),
-
 
     path('periods/', views.PeriodListView.as_view(), name='period_list'),
     path('periods/create/', views.PeriodCreateView.as_view(), name='period_create'),

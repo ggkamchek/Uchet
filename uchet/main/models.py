@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import UserManager as BaseUserManager
 
@@ -6,15 +7,14 @@ class UserManager(BaseUserManager):
     def create_user(self, username, email=None, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', False)
         extra_fields.setdefault('is_superuser', False)
-        extra_fields.setdefault('role', User.RoleChoices.USER)   # по умолчанию обычный пользователь
+        extra_fields.setdefault('role', User.RoleChoices.USER)
         return self._create_user(username, email, password, **extra_fields)
 
     def create_superuser(self, username, email=None, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('role', User.RoleChoices.ADMIN)   # суперпользователь получает роль admin
+        extra_fields.setdefault('role', User.RoleChoices.ADMIN)
         return self._create_user(username, email, password, **extra_fields)
-
 
 class User(AbstractUser):
     class RoleChoices(models.TextChoices):
@@ -52,11 +52,9 @@ class User(AbstractUser):
         if self.role == self.RoleChoices.ADMIN:
             self.is_staff = True
         else:
-            self.is_staff = False   
+            self.is_staff = False
         super().save(*args, **kwargs)
 
-
-# ---------- Модель Work (таблица Works) ----------
 class Work(models.Model):
     id = models.AutoField(primary_key=True, db_column='ID')
     name = models.CharField(max_length=255, unique=True, db_column='Name')
@@ -67,14 +65,12 @@ class Work(models.Model):
     def __str__(self):
         return self.name
 
-
-# ---------- Модель Period (таблица Periods) ----------
 class Period(models.Model):
     id = models.AutoField(primary_key=True, db_column='ID')
     end_date = models.DateTimeField(unique=True, db_column='End_date')
     name = models.CharField(max_length=20, unique=True, db_column='Name')
     start_date = models.DateTimeField(unique=True, db_column='Start_date')
-    status = models.BooleanField(db_column='Status')   # bit в SQLite хранится как 0/1
+    status = models.BooleanField(db_column='Status')
 
     class Meta:
         db_table = 'Periods'
@@ -82,8 +78,6 @@ class Period(models.Model):
     def __str__(self):
         return self.name
 
-
-# ---------- Модель Criterion (таблица criterions) ----------
 class Criterion(models.Model):
     id = models.AutoField(primary_key=True, db_column='ID')
     name = models.CharField(
@@ -107,8 +101,6 @@ class Criterion(models.Model):
     def __str__(self):
         return self.name
 
-
-# ---------- Модель Field (таблица Fields) ----------
 class Field(models.Model):
     class TypeChoices(models.TextChoices):
         TEXT = 'text', 'текст'
@@ -123,12 +115,12 @@ class Field(models.Model):
         db_column='criterionsID',
         related_name='fields'
     )
-    
+
     type = models.CharField(
         max_length=20,
         choices=TypeChoices.choices,
         default=TypeChoices.TEXT,
-        db_column='Type'  
+        db_column='Type'
     )
 
     class Meta:
@@ -137,8 +129,6 @@ class Field(models.Model):
     def __str__(self):
         return self.caption
 
-
-# ---------- Модель Level (таблица Levels) ----------
 class Level(models.Model):
     id = models.AutoField(primary_key=True, db_column='ID')
     caption = models.CharField(max_length=255, db_column='Caption')
@@ -156,8 +146,6 @@ class Level(models.Model):
     def __str__(self):
         return self.caption
 
-
-# ---------- Модель Achievement (таблица Achievements) ----------
 class Achievement(models.Model):
     id = models.AutoField(primary_key=True, db_column='ID')
     period = models.ForeignKey(
@@ -180,36 +168,44 @@ class Achievement(models.Model):
         related_name='achievements'
     )
     def total_score(self):
-        total = 0
-        # Собираем уникальные критерии из всех полей достижения
+        fvs = list(self.field_values.select_related('field__criterion').all())
         unique_criteria = set()
-        
-        for field_value in self.field_values.all():
+        chooser_pairs = []
+
+        for field_value in fvs:
             field = field_value.field
             unique_criteria.add(field.criterion)
-            
-            if field.type == 'chooser':
-                try:
-                    level_id = int(field_value.value)
-                    level = Level.objects.get(pk=level_id, field=field)
-                    # Складываем уровень и коэффициент критерия
-                    total += level.ratio + field.criterion.ratio
-                except (ValueError, Level.DoesNotExist):
-                    pass
-        
-        # Добавляем баллы за критерии, у которых нет chooser полей
+            if field.type != Field.TypeChoices.CHOOSER:
+                continue
+            try:
+                level_id = int(field_value.value)
+            except (TypeError, ValueError):
+                continue
+            chooser_pairs.append((field, level_id))
+
+        level_by_key = {}
+        if chooser_pairs:
+            q = Q()
+            for field, lid in chooser_pairs:
+                q |= Q(pk=lid, field_id=field.id)
+            level_by_key = {
+                (lvl.field_id, lvl.pk): lvl for lvl in Level.objects.filter(q)
+            }
+
+        total = 0.0
+        for field, lid in chooser_pairs:
+            level = level_by_key.get((field.id, lid))
+            if level is not None:
+                total += level.ratio + field.criterion.ratio
+
         for criterion in unique_criteria:
-            # Проверяем, есть ли у этого критерия хотя бы одно chooser поле в достижении
-            has_chooser = False
-            for field_value in self.field_values.all():
-                if field_value.field.criterion == criterion and field_value.field.type == 'chooser':
-                    has_chooser = True
-                    break
-            
-            # Если нет chooser полей, начисляем только коэффициент критерия
-            if not has_chooser:
+            if not any(
+                fv.field.criterion_id == criterion.pk
+                and fv.field.type == Field.TypeChoices.CHOOSER
+                for fv in fvs
+            ):
                 total += criterion.ratio
-        
+
         return total
 
     class Meta:
@@ -218,8 +214,6 @@ class Achievement(models.Model):
     def __str__(self):
         return f'Achievement {self.id}'
 
-
-# ---------- Модель AchievementFieldValue (таблица AchievementFieldValues) ----------
 class AchievementFieldValue(models.Model):
     id = models.AutoField(primary_key=True, db_column='ID')
     achievement = models.ForeignKey(

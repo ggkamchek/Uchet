@@ -6,13 +6,11 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.utils import timezone
-from django.db import transaction
 from django.conf import settings
 import os
 import uuid
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
 from django.views.decorators.http import require_GET
-from django.core import serializers
 import json
 import math
 from collections import defaultdict
@@ -24,13 +22,9 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
-
-# Коды отделений для преподавателей (поле User.department, max 5 символов)
 TEACHER_DEPARTMENT_PRESETS = ('ДПИ', 'ИТВТ', 'СП')
 
-
 def _department_choices_for_form():
-    """Список отделений: пресеты + уникальные значения из БД."""
     from_db = list(
         User.objects.exclude(department='')
         .values_list('department', flat=True)
@@ -39,15 +33,11 @@ def _department_choices_for_form():
     merged = sorted(set(TEACHER_DEPARTMENT_PRESETS) | set(from_db))
     return merged
 
-
 def _department_display_label(user):
-    """Текст отделения для отчётов и графиков (пустое в БД → понятная подпись)."""
     text = (getattr(user, 'department', None) or '').strip()
     return text if text else 'Без отделения'
 
-
 def _director_achievement_queryset(request):
-    """Достижения с учётом GET-фильтров руководителя (период, отделение, работа)."""
     period_id = request.GET.get('period')
     department = request.GET.get('department')
     work_id = request.GET.get('work')
@@ -62,20 +52,16 @@ def _director_achievement_queryset(request):
         qs = qs.filter(work_id=work_id)
     return qs
 
-
 def _user_fio_name_patronymic_last(user):
-    """ФИО в формате «Имя Отчество Фамилия» (как в эталонном отчёте Excel)."""
     parts = [user.first_name or '', user.patronymic or '', user.last_name or '']
     s = ' '.join(p for p in parts if p).strip()
     return s if s else user.username
-
 
 def _sanitize_excel_sheet_title(name):
     for ch in '[]*\\/:?':
         name = name.replace(ch, ' ')
     name = (name or '').strip() or 'Преподаватель'
     return name[:31]
-
 
 def _unique_excel_sheet_title(base, used_titles):
     title = _sanitize_excel_sheet_title(base)
@@ -91,7 +77,6 @@ def _unique_excel_sheet_title(base, used_titles):
             return cand
         n += 1
 
-
 def _level_caption_map_for_achievements(achievements):
     ids = []
     for ach in achievements:
@@ -104,7 +89,6 @@ def _level_caption_map_for_achievements(achievements):
     if not ids:
         return {}
     return {lvl.pk: lvl.caption for lvl in Level.objects.filter(pk__in=ids)}
-
 
 def _export_field_value_display(field_value, level_captions):
     f = field_value.field
@@ -121,9 +105,7 @@ def _export_field_value_display(field_value, level_captions):
         return '—'
     return raw if raw else '—'
 
-
 def _achievement_criterion_label_for_export(ach):
-    """Текст перед «баллы:» на листе преподавателя — по критериям достижения, не по работе."""
     names = {fv.field.criterion.name for fv in ach.field_values.all()}
     if names:
         return ', '.join(sorted(names))
@@ -131,9 +113,7 @@ def _achievement_criterion_label_for_export(ach):
         return ach.work.name
     return 'Критерий'
 
-
 def _sanitize_filename_segment(text, max_len=80):
-    """Фрагмент имени файла без символов, запрещённых в Windows."""
     text = (text or '').strip()
     for ch in '<>:"/\\|?*\r\n\t':
         text = text.replace(ch, '_')
@@ -145,9 +125,7 @@ def _sanitize_filename_segment(text, max_len=80):
         text = 'без_названия'
     return text[:max_len]
 
-
 def _director_export_download_filename(request):
-    """Имя файла: AllPrep_<период>_<дата_создания>.xlsx"""
     period_id = request.GET.get('period')
     if period_id:
         try:
@@ -160,18 +138,11 @@ def _director_export_download_filename(request):
     date_part = timezone.localtime(timezone.now()).strftime('%Y-%m-%d')
     return f'AllPrep_{period_part}_{date_part}.xlsx', date_part
 
-
 def _content_disposition_attachment(download_name, ascii_fallback):
-    """Заголовок Content-Disposition с UTF-8 (filename*) и латинским запасным вариантом."""
     enc = quote(download_name, safe='')
     return f"attachment; filename=\"{ascii_fallback}\"; filename*=UTF-8''{enc}"
 
-
 def _director_report_data(request, achievements):
-    """
-    Единая структура отчёта для XLSX и HTML-предпросмотра.
-    achievements — список Achievement с тем же prefetch, что у _director_achievement_queryset.
-    """
     total_score_sum = sum(a.total_score() for a in achievements)
 
     budget_raw = request.GET.get('budget', '').strip()
@@ -272,8 +243,6 @@ def _director_report_data(request, achievements):
         'sheets': sheets,
     }
 
-
-# --- Оформление Excel как в шаблоне AllPrep.xlsx (параметры сняты с эталона) ---
 _AP_SIDE_THIN = Side(style='thin', color='FF000000')
 _AP_BORDER_THIN = Border(
     left=_AP_SIDE_THIN,
@@ -312,9 +281,7 @@ _AP_TEACHER_COL_A = 123.140625
 _AP_TEACHER_COL_B = 14.0
 _AP_BORDER_EMPTY = Border()
 
-
 def _xlsx_row_height_for_wrapped_cell(value, col_width_units, min_h=15.0, max_h=280.0):
-    """Высота строки (pt) для переноса текста при заданной ширине колонки Excel."""
     if value is None:
         return min_h
     if isinstance(value, (int, float)) and not isinstance(value, bool):
@@ -327,9 +294,7 @@ def _xlsx_row_height_for_wrapped_cell(value, col_width_units, min_h=15.0, max_h=
     h = 12.0 + lines * 12.75
     return max(min_h, min(max_h, h))
 
-
 def _xlsx_teacher_col_a_width_units(value, row_idx, max_w=200.0):
-    """Оценка ширины колонки A (лист преподавателя), чтобы длинный текст влезал в одну строку по возможности."""
     if value is None:
         return _AP_TEACHER_COL_A
     s = str(value).strip()
@@ -346,9 +311,7 @@ def _xlsx_teacher_col_a_width_units(value, row_idx, max_w=200.0):
         units += (1.32 if ord(ch) > 127 else 1.18) * scale
     return min(max_w, max(_AP_TEACHER_COL_A, units))
 
-
 def _style_director_xlsx_itog(ws, num_teacher_rows, total_row_idx):
-    """Стили листа «ИТОГ» как в AllPrep: шрифты, жёлтые ячейки сумм, сетка, итог."""
     ws.freeze_panes = 'A3'
     for letter, w in _AP_ITOG_COL_WIDTHS.items():
         ws.column_dimensions[letter].width = w
@@ -408,9 +371,7 @@ def _style_director_xlsx_itog(ws, num_teacher_rows, total_row_idx):
                 c.alignment = _AP_ALIGN_CR
                 c.number_format = _XLSX_NUM_BALL if col == 3 else _XLSX_NUM_MONEY
 
-
 def _style_director_xlsx_teacher(ws, max_row):
-    """Стили листа преподавателя как в AllPrep: TNR заголовки, жёлтый балл, линии под полями."""
     ws.column_dimensions['B'].width = _AP_TEACHER_COL_B
     if max_row >= 6:
         ws.freeze_panes = 'A6'
@@ -481,12 +442,9 @@ def _style_director_xlsx_teacher(ws, max_row):
                 ca.value, w_a, min_h=19.5, max_h=260.0
             )
 
-
-# Проверка прав доступа (только администратор)
 def is_admin(user):
-    return user.is_authenticated and user.role == 'admin'
+    return user.is_authenticated and user.role == User.RoleChoices.ADMIN
 
-# Миксин для защиты CBV
 class AdminRequiredMixin:
     @method_decorator(user_passes_test(is_admin))
     def dispatch(self, *args, **kwargs):
@@ -502,7 +460,6 @@ def role_redirect(request):
             return redirect('director_dashboard')
     return redirect('login')
 
-# Главная страница дашборда
 @user_passes_test(is_admin)
 def dashboard_home(request):
     context = {
@@ -513,7 +470,6 @@ def dashboard_home(request):
         'latest_periods': Period.objects.all().order_by('-id')[:5],
     }
     return render(request, 'main/dashboard_home.html', context)
-
 
 @user_passes_test(is_admin)
 def user_create_page(request):
@@ -543,7 +499,6 @@ def user_create_page(request):
             messages.error(request, 'Пользователь с таким логином уже существует.')
             return redirect('user_create')
 
-        # У модели есть обязательные поля, задаём безопасные значения по умолчанию.
         User.objects.create_user(
             username=username,
             password=password,
@@ -563,7 +518,6 @@ def user_create_page(request):
         'main/user/user_create.html',
         {'users': users, 'department_choices': _department_choices_for_form()},
     )
-
 
 class UserDeleteView(AdminRequiredMixin, DeleteView):
     model = User
@@ -586,10 +540,8 @@ class UserDeleteView(AdminRequiredMixin, DeleteView):
         messages.success(request, f'Пользователь «{username}» удалён.')
         return super().delete(request, *args, **kwargs)
 
-
 def is_director(user):
     return user.is_authenticated and user.role == User.RoleChoices.DIRECTOR
-
 
 @user_passes_test(is_director)
 def director_dashboard(request):
@@ -599,7 +551,6 @@ def director_dashboard(request):
 
     achievements = list(_director_achievement_queryset(request))
 
-    # KPI
     total_score = 0
     dept_totals = {}
     period_dept_totals = {}
@@ -622,7 +573,6 @@ def director_dashboard(request):
 
     active_period = Period.objects.filter(status=True).first()
 
-    # Расчет цены одного балла от бюджета
     budget_raw = request.GET.get('budget', '').strip()
     point_price = None
     if request.GET.get('reset') == '1':
@@ -635,7 +585,6 @@ def director_dashboard(request):
         except ValueError:
             budget_raw = ''
 
-    # Данные для графиков
     dept_labels = sorted(dept_totals.keys())
     dept_values = [round(dept_totals[d], 2) for d in dept_labels]
 
@@ -659,7 +608,6 @@ def director_dashboard(request):
         },
     }
 
-    # Данные для фильтров (только непустые коды отделений из профилей преподавателей)
     periods = Period.objects.all().order_by('name')
     departments = sorted(
         User.objects.filter(role=User.RoleChoices.USER)
@@ -721,7 +669,6 @@ def director_dashboard(request):
         'report_preview': report_preview,
     }
     return render(request, 'main/director/director_dashboard.html', context)
-
 
 @user_passes_test(is_director)
 def director_export(request):
@@ -814,7 +761,6 @@ def director_export(request):
     wb.save(response)
     return response
 
-# ---------- Работы (Work) ----------
 class WorkListView(AdminRequiredMixin, ListView):
     model = Work
     template_name = 'main/work/work_list.html'
@@ -842,7 +788,6 @@ class WorkDeleteView(AdminRequiredMixin, DeleteView):
     template_name = 'main/work/work_confirm_delete.html'
     success_url = reverse_lazy('work_list')
 
-# ---------- Критерии (Criterion) ----------
 class CriterionListView(AdminRequiredMixin, ListView):
     model = Criterion
     template_name = 'main/criterion/criterion_list.html'
@@ -855,7 +800,6 @@ class CriterionCreateView(AdminRequiredMixin, CreateView):
     success_url = reverse_lazy('criterion_list')
 
     def get_initial(self):
-        """Предзаполняет поле work, если передан параметр work в GET"""
         initial = super().get_initial()
         work_id = self.request.GET.get('work')
         if work_id:
@@ -881,7 +825,6 @@ class CriterionDeleteView(AdminRequiredMixin, DeleteView):
     template_name = 'main/criterion/criterion_confirm_delete.html'
     success_url = reverse_lazy('criterion_list')
 
-# ---------- Поля (Field) ----------
 class FieldListView(AdminRequiredMixin, ListView):
     model = Field
     template_name = 'main/field/field_list.html'
@@ -889,7 +832,7 @@ class FieldListView(AdminRequiredMixin, ListView):
 
 class FieldCreateView(AdminRequiredMixin, CreateView):
     model = Field
-    fields = ['caption', 'criterion', 'type']   # type — выбор из text/chooser/photo
+    fields = ['caption', 'criterion', 'type']
     template_name = 'main/field/field_form.html'
     success_url = reverse_lazy('field_list')
 
@@ -919,7 +862,6 @@ class FieldDeleteView(AdminRequiredMixin, DeleteView):
     template_name = 'main/field/field_confirm_delete.html'
     success_url = reverse_lazy('field_list')
 
-# ---------- Уровни (Level) ----------
 class LevelListView(AdminRequiredMixin, ListView):
     model = Level
     template_name = 'main/level/level_list.html'
@@ -957,7 +899,6 @@ class LevelDeleteView(AdminRequiredMixin, DeleteView):
     template_name = 'main/level/level_confirm_delete.html'
     success_url = reverse_lazy('level_list')
 
-# ---------- Периоды (Period) ----------
 class PeriodListView(AdminRequiredMixin, ListView):
     model = Period
     template_name = 'main/period/period_list.html'
@@ -985,24 +926,20 @@ class PeriodDeleteView(AdminRequiredMixin, DeleteView):
     template_name = 'main/period/period_confirm_delete.html'
     success_url = reverse_lazy('period_list')
 
-    # Миксин для проверки роли преподавателя (teacher)
 class TeacherRequiredMixin(UserPassesTestMixin):
     def test_func(self):
         return self.request.user.is_authenticated and self.request.user.role == User.RoleChoices.USER
 
-# Декоратор для FBV
 def teacher_required(view_func):
     decorated_view_func = login_required(view_func)
     return user_passes_test(lambda u: u.is_authenticated and u.role == User.RoleChoices.USER)(decorated_view_func)
 
-    
-# ---------- Преподавательская панель ----------
 @teacher_required
 def teacher_dashboard(request):
-    # Очищаем старые сообщения
+
     storage = messages.get_messages(request)
     storage.used = True
-    
+
     achievements = Achievement.objects.filter(user=request.user).select_related(
         'work', 'period'
     ).prefetch_related(
@@ -1011,114 +948,15 @@ def teacher_dashboard(request):
     ).order_by('-time_of_addition')
     return render(request, 'main/teacher/teacher_dashboard.html', {'achievements': achievements})
 
-class TeacherAchievementListView(TeacherRequiredMixin, ListView):
-    model = Achievement
-    template_name = 'main/teacher/teacher_achievement_list.html'
-    context_object_name = 'achievements'
-
-    def get_queryset(self):
-        return Achievement.objects.filter(user=self.request.user).order_by('-time_of_addition')
-
-@teacher_required
-def teacher_achievement_select_work(request):
-    works = Work.objects.all()
-    return render(request, 'main/teacher/teacher_select_work.html', {'works': works})
-
-@teacher_required
-def teacher_achievement_create(request, work_id, criterion_id):
-    # Очищаем старые сообщения
-    storage = messages.get_messages(request)
-    storage.used = True
-    
-    work = get_object_or_404(Work, pk=work_id)
-    criterion = get_object_or_404(Criterion, pk=criterion_id, work=work)
-
-    # Получаем активный период
-    try:
-        active_period = Period.objects.get(status=True)
-    except Period.DoesNotExist:
-        messages.error(request, 'Нет активного периода. Невозможно добавить достижение.')
-        return redirect('teacher_dashboard')
-
-    if request.method == 'POST':
-        # Создаём достижение
-        achievement = Achievement.objects.create(
-            user=request.user,
-            work=work,
-            period=active_period,
-            time_of_addition=timezone.now()
-        )
-
-        # Поля только для выбранного критерия
-        fields = Field.objects.filter(criterion=criterion).prefetch_related('levels')
-
-        for field in fields:
-            field_key = f'field_{field.id}'
-            if field.type == 'text':
-                value = request.POST.get(field_key, '').strip()
-                if value:
-                    AchievementFieldValue.objects.create(
-                        achievement=achievement,
-                        field=field,
-                        value=value
-                    )
-            elif field.type == 'chooser':
-                level_id = request.POST.get(field_key)
-                if level_id:
-                    try:
-                        level = Level.objects.get(pk=level_id, field=field)
-                        AchievementFieldValue.objects.create(
-                            achievement=achievement,
-                            field=field,
-                            value=str(level_id)
-                        )
-                    except Level.DoesNotExist:
-                        pass
-            elif field.type == 'photo':
-                if field_key in request.FILES:
-                    uploaded_file = request.FILES[field_key]
-                    upload_dir = os.path.join(settings.MEDIA_ROOT, 'achievement_photos')
-                    os.makedirs(upload_dir, exist_ok=True)
-                    ext = os.path.splitext(uploaded_file.name)[1]
-                    filename = f"{achievement.id}_{field.id}_{uuid.uuid4().hex}{ext}"
-                    file_path = os.path.join(upload_dir, filename)
-                    with open(file_path, 'wb+') as destination:
-                        for chunk in uploaded_file.chunks():
-                            destination.write(chunk)
-                    relative_path = os.path.join('achievement_photos', filename)
-                    AchievementFieldValue.objects.create(
-                        achievement=achievement,
-                        field=field,
-                        value=relative_path
-                    )
-
-        messages.success(request, 'Достижение успешно добавлено')
-        return redirect('teacher_dashboard')
-
-    # GET запрос: показываем форму для выбранного критерия
-    fields = Field.objects.filter(criterion=criterion).prefetch_related('levels')
-    context = {
-        'work': work,
-        'criterion': criterion,
-        'fields': fields,
-    }
-    return render(request, 'main/teacher/teacher_achievement_form.html', context)
-
-@teacher_required
-def teacher_achievement_select_criterion(request, work_id):
-    work = get_object_or_404(Work, pk=work_id)
-    criteria = Criterion.objects.filter(work=work)
-    return render(request, 'main/teacher/teacher_select_criterion.html', {'work': work, 'criteria': criteria})
-
 class TeacherAchievementDeleteView(TeacherRequiredMixin, DeleteView):
     model = Achievement
     template_name = 'main/teacher/teacher_achievement_confirm_delete.html'
     success_url = reverse_lazy('teacher_dashboard')
 
     def get_queryset(self):
-        # Только свои достижения
+
         return Achievement.objects.filter(user=self.request.user)
-    
+
 @teacher_required
 def teacher_achievement_create_page(request):
     works = Work.objects.all()
@@ -1143,13 +981,13 @@ def get_fields_html(request, criterion_id):
         return render(request, 'main/partials/fields_form.html', {'fields': fields})
     except Criterion.DoesNotExist:
         return HttpResponseBadRequest('Criterion not found')
-    
+
 @teacher_required
 def teacher_achievement_save(request):
-    # Очищаем старые сообщения
+
     storage = messages.get_messages(request)
     storage.used = True
-    
+
     if request.method == 'POST':
         work_id = request.POST.get('work')
         criterion_id = request.POST.get('criterion')
@@ -1161,13 +999,11 @@ def teacher_achievement_save(request):
         work = get_object_or_404(Work, pk=work_id)
         criterion = get_object_or_404(Criterion, pk=criterion_id, work=work)
 
-        # Получаем активный период
         active_period = Period.objects.filter(status=True).first()
         if not active_period:
             messages.error(request, 'Нет активного периода')
             return redirect('teacher_achievement_create')
 
-        # Создаём достижение
         achievement = Achievement.objects.create(
             user=request.user,
             work=work,
@@ -1175,26 +1011,21 @@ def teacher_achievement_save(request):
             time_of_addition=timezone.now()
         )
 
-        # Получаем все поля выбранного критерия
         fields = criterion.fields.all()
         for field in fields:
             field_key = f'field_{field.id}'
-            if field.type == 'text':
+            if field.type == Field.TypeChoices.TEXT:
                 value = request.POST.get(field_key, '').strip()
                 if value:
                     AchievementFieldValue.objects.create(achievement=achievement, field=field, value=value)
-            elif field.type == 'chooser':
+            elif field.type == Field.TypeChoices.CHOOSER:
                 level_id = request.POST.get(field_key)
-                if level_id:
-                    try:
-                        level = Level.objects.get(pk=level_id, field=field)
-                        AchievementFieldValue.objects.create(achievement=achievement, field=field, value=str(level_id))
-                    except Level.DoesNotExist:
-                        pass
-            elif field.type == 'photo':
+                if level_id and Level.objects.filter(pk=level_id, field=field).exists():
+                    AchievementFieldValue.objects.create(achievement=achievement, field=field, value=str(level_id))
+            elif field.type == Field.TypeChoices.PHOTO:
                 if field_key in request.FILES:
                     uploaded_file = request.FILES[field_key]
-                    # Сохранение файла
+
                     upload_dir = os.path.join(settings.MEDIA_ROOT, 'achievement_photos')
                     os.makedirs(upload_dir, exist_ok=True)
                     ext = os.path.splitext(uploaded_file.name)[1]
@@ -1210,7 +1041,7 @@ def teacher_achievement_save(request):
         return redirect('teacher_dashboard')
     else:
         return redirect('teacher_achievement_create')
-    
+
 @teacher_required
 def teacher_achievement_edit(request, pk):
     achievement = get_object_or_404(
@@ -1234,7 +1065,7 @@ def teacher_achievement_edit(request, pk):
             field_key = f'field_{field.id}'
             field_value_obj = existing_values.get(field.id)
 
-            if field.type == 'text':
+            if field.type == Field.TypeChoices.TEXT:
                 value = request.POST.get(field_key, '').strip()
                 if field_value_obj:
                     field_value_obj.value = value
@@ -1246,14 +1077,9 @@ def teacher_achievement_edit(request, pk):
                         value=value
                     )
 
-            elif field.type == 'chooser':
+            elif field.type == Field.TypeChoices.CHOOSER:
                 level_id = request.POST.get(field_key)
-                if level_id:
-                    try:
-                        Level.objects.get(pk=level_id, field=field)
-                    except Level.DoesNotExist:
-                        continue
-
+                if level_id and Level.objects.filter(pk=level_id, field=field).exists():
                     if field_value_obj:
                         field_value_obj.value = str(level_id)
                         field_value_obj.save(update_fields=['value'])
@@ -1264,7 +1090,7 @@ def teacher_achievement_edit(request, pk):
                             value=str(level_id)
                         )
 
-            elif field.type == 'photo' and field_key in request.FILES:
+            elif field.type == Field.TypeChoices.PHOTO and field_key in request.FILES:
                 uploaded_file = request.FILES[field_key]
                 upload_dir = os.path.join(settings.MEDIA_ROOT, 'achievement_photos')
                 os.makedirs(upload_dir, exist_ok=True)

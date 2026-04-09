@@ -1,0 +1,30 @@
+.dash-home-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem 0.75rem;
+    flex-wrap: wrap;
+}
+.dash-home-row__main {
+    flex: 1 1 12rem;
+    min-width: 0;
+}
+.dash-home-row__main a {
+    word-break: break-word;
+}
+.dash-home-row__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+.dash-home-row .badge-muted {
+    max-width: 14rem;
+    white-space: normal;
+    text-align: left;
+    line-height: 1.25;
+    word-break: break-word;
+}
+.dash-home-stack .card:not(:last-child) {
+    margin-bottom: 1.5rem;
+}

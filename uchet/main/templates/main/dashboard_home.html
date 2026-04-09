@@ -1,41 +1,12 @@
 {% extends 'main/base_dashboard.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard_home.css' %}">
+{% endblock %}
 
 {% block content %}
-<style>
-    /* Длинные подписи в карточках главной: не разъезжают flex и не вылезают из колонки */
-    .dash-home-row {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.5rem 0.75rem;
-        flex-wrap: wrap;
-    }
-    .dash-home-row__main {
-        flex: 1 1 12rem;
-        min-width: 0;
-    }
-    .dash-home-row__main a {
-        word-break: break-word;
-    }
-    .dash-home-row__actions {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        flex-shrink: 0;
-        margin-left: auto;
-    }
-    .dash-home-row .badge-muted {
-        max-width: 14rem;
-        white-space: normal;
-        text-align: left;
-        line-height: 1.25;
-        word-break: break-word;
-    }
-    .dash-home-stack .card:not(:last-child) {
-        margin-bottom: 1.5rem;
-    }
-</style>
 <div class="row">
-    <!-- Левая колонка: работы → поля → периоды (выше на странице, без «третьего ряда») -->
     <div class="col-md-6 mb-4">
         <div class="dash-home-stack">
             <div class="card">
@@ -134,7 +105,6 @@
         </div>
     </div>
 
-    <!-- Правая колонка: критерии → уровни -->
     <div class="col-md-6 mb-4">
         <div class="dash-home-stack">
             <div class="card">

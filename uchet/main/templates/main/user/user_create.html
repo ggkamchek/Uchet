@@ -1,87 +1,11 @@
 {% extends 'main/base_dashboard.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/user_create.css' %}">
+{% endblock %}
 
 {% block content %}
-<style>
-    .user-create-card {
-        max-width: 760px;
-        margin: 0 auto;
-        border-radius: 16px;
-        border: 0;
-        box-shadow: 0 12px 30px rgba(0,0,0,0.06);
-    }
-    .user-create-card .card-header {
-        background: #ffffff;
-        border-bottom: 1px solid #e5e7eb;
-        padding: 14px 18px;
-    }
-    .user-create-title {
-        margin: 0;
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: #111827;
-    }
-    .user-create-card .card-body {
-        padding: 16px 18px;
-    }
-    .user-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-    }
-    .user-grid .full {
-        grid-column: 1 / -1;
-    }
-    .user-grid .fio-row {
-        grid-column: 1 / -1;
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 12px;
-    }
-    @media (max-width: 768px) {
-        .user-grid {
-            grid-template-columns: 1fr;
-        }
-        .user-grid .fio-row {
-            grid-template-columns: 1fr;
-        }
-    }
-    .user-list-details {
-        border-top: 1px solid #e5e7eb;
-        padding-top: 12px;
-        margin-top: 8px;
-    }
-    .user-list-details > summary {
-        list-style: none;
-        cursor: pointer;
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: #111827;
-        padding: 6px 0 10px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        user-select: none;
-    }
-    .user-list-details > summary::-webkit-details-marker {
-        display: none;
-    }
-    .user-list-details > summary::before {
-        content: '▸';
-        display: inline-block;
-        font-size: 0.85rem;
-        color: #6b7280;
-        transition: transform 0.15s ease;
-    }
-    .user-list-details[open] > summary::before {
-        transform: rotate(90deg);
-    }
-    .user-list-details .summary-hint {
-        font-size: 0.85rem;
-        font-weight: 400;
-        color: #6b7280;
-    }
-</style>
-
 <div class="card user-create-card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h3 class="user-create-title">Создание пользователя</h3>
@@ -167,7 +91,7 @@
                                 <th>ФИО</th>
                                 <th>Роль</th>
                                 <th>Отделение</th>
-                                <th class="text-end" style="width:1%"><span class="visually-hidden">Действия</span></th>
+                                <th class="text-end user-table-actions-col"><span class="visually-hidden">Действия</span></th>
                             </tr>
                         </thead>
                         <tbody id="user-list-tbody">

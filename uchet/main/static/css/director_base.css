@@ -1,0 +1,83 @@
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background-color: #2a2a2a;
+}
+.director-topbar {
+    background: #e5e7eb;
+    border-bottom: 1px solid #d1d5db;
+}
+.director-topbar-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+.director-app-brand {
+    font-size: 1.65rem;
+    font-weight: 600;
+    color: #111827;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+    white-space: nowrap;
+}
+.director-app-brand:hover {
+    color: #111827;
+}
+.director-app-brand > span:last-child {
+    line-height: 1;
+    display: inline-block;
+}
+.tkpi-book-inline-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    height: 1.48em;
+    line-height: 0;
+    transform: translateY(0.2em);
+}
+.tkpi-book-inline-wrap svg {
+    height: 100%;
+    width: auto;
+    display: block;
+}
+.director-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.director-user-name {
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: #111827;
+    white-space: nowrap;
+}
+.director-logout-btn {
+    border-radius: 10px;
+    padding: 6px 10px;
+    background-color: #374151;
+    border-color: #374151;
+    color: #ffffff;
+}
+.director-logout-btn:hover {
+    background-color: #111827;
+    border-color: #111827;
+    color: #ffffff;
+}
+.director-main-wrap {
+    min-height: calc(100vh - 56px);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 24px 16px;
+}
+.director-main {
+    max-width: 1280px;
+    width: 100%;
+}

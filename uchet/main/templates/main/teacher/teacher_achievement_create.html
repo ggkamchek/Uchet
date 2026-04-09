@@ -1,35 +1,11 @@
 {% extends 'main/teacher/teacher_base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/teacher_achievement_pages.css' %}">
+{% endblock %}
 
 {% block content %}
-<style>
-    .ach-form-card {
-        max-width: 640px;
-        margin: 0 auto;
-        border-radius: 16px;
-        border: 0;
-        box-shadow: 0 12px 30px rgba(0,0,0,0.06);
-    }
-    .ach-form-card .card-header {
-        padding: 16px 20px 10px;
-        border-bottom: none;
-        background: #ffffff;
-    }
-    .ach-form-card-title {
-        margin: 0;
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: #111827;
-    }
-    .ach-form-card .card-body {
-        padding: 10px 20px 16px;
-    }
-    .ach-form-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 8px;
-    }
-</style>
-
 <div class="card ach-form-card">
     <div class="card-header">
         <h3 class="ach-form-card-title">Добавить достижение</h3>
@@ -54,9 +30,7 @@
                 </select>
             </div>
 
-            <div id="fields-container" class="mb-3">
-                <!-- Сюда будут загружаться поля критерия -->
-            </div>
+            <div id="fields-container" class="mb-3"></div>
 
             <div class="ach-form-actions">
                 <a href="{% url 'teacher_dashboard' %}" class="btn btn-outline-secondary">Отмена</a>

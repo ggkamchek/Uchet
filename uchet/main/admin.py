@@ -18,7 +18,6 @@ class CustomUserAdmin(UserAdmin):
 
 admin.site.register(User, CustomUserAdmin)
 
-# Регистрация остальных моделей с простым отображением
 @admin.register(Work)
 class WorkAdmin(admin.ModelAdmin):
     list_display = ('id', 'name')
@@ -29,7 +28,7 @@ class CriterionAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'work', 'get_ratio')
     list_filter = ('work',)
     search_fields = ('name',)
-    
+
     def get_ratio(self, obj):
         return f"{obj.ratio}"
     get_ratio.short_description = 'Коэффициент'

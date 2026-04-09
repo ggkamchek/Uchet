@@ -1,0 +1,140 @@
+body {
+    font-size: 1.15rem;
+}
+.admin-topbar {
+    background: #e5e7eb;
+    border-bottom: 1px solid #d1d5db;
+}
+.admin-topbar-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+.admin-app-brand {
+    font-size: 1.65rem;
+    font-weight: 600;
+    color: #111827;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+    white-space: nowrap;
+}
+.admin-app-brand:hover {
+    color: #111827;
+}
+.admin-app-brand > span:last-child {
+    line-height: 1;
+    display: inline-block;
+}
+.tkpi-book-inline-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    height: 1.48em;
+    line-height: 0;
+    transform: translateY(0.2em);
+}
+.tkpi-book-inline-wrap svg {
+    height: 100%;
+    width: auto;
+    display: block;
+}
+.admin-nav {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.admin-nav-links {
+    display: flex;
+    gap: 10px;
+    font-size: 0.95rem;
+}
+.admin-nav-links a {
+    text-decoration: none;
+    color: #4b5563;
+    padding: 4px 8px;
+    border-radius: 8px;
+}
+.admin-nav-links a:hover {
+    background: #e5e7eb;
+    color: #111827;
+}
+.admin-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.admin-user-name {
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: #111827;
+    white-space: nowrap;
+}
+.admin-logout-btn {
+    border-radius: 10px;
+    padding: 6px 10px;
+    background-color: #374151;
+    border-color: #374151;
+    color: #ffffff;
+}
+.admin-logout-btn:hover {
+    background-color: #111827;
+    border-color: #111827;
+    color: #ffffff;
+}
+.admin-main {
+    max-width: 1280px;
+}
+.badge-muted {
+    background-color: #e5e7eb;
+    color: #4b5563;
+    font-weight: 500;
+}
+.badge-active-period {
+    background-color: #d1fae5;
+    color: #047857;
+}
+.admin-main .btn-icon-outline {
+    border-radius: 999px;
+    padding-inline: 10px;
+    border-color: #9ca3af;
+    color: #374151;
+    background-color: transparent;
+}
+.admin-main .btn-icon-outline:hover {
+    background-color: #111827;
+    border-color: #111827;
+    color: #ffffff;
+}
+.admin-main .btn-primary,
+.admin-main .btn-success,
+.admin-main .btn-info,
+.admin-main .btn-warning {
+    background-color: #e5e7eb;
+    border-color: #9ca3af;
+    color: #111827;
+}
+.admin-main .btn-primary:hover,
+.admin-main .btn-success:hover,
+.admin-main .btn-info:hover,
+.admin-main .btn-warning:hover {
+    background-color: #d1d5db;
+    border-color: #6b7280;
+    color: #111827;
+}
+.admin-main .btn-danger {
+    background-color: #6b7280;
+    border-color: #4b5563;
+    color: #ffffff;
+}
+.admin-main .btn-danger:hover {
+    background-color: #4b5563;
+    border-color: #374151;
+    color: #ffffff;
+}

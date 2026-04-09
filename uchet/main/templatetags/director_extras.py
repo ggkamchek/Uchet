@@ -2,10 +2,8 @@ from django import template
 
 register = template.Library()
 
-
 @register.filter
 def dir_money(value, decimals=2):
-    """Формат суммы: пробелы как разделитель тысяц, запятая в дробной части."""
     if value is None or value == '':
         return '—'
     try:

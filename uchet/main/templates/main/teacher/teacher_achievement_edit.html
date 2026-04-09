@@ -1,29 +1,11 @@
 {% extends 'main/teacher/teacher_base.html' %}
-{% block content %}
-<style>
-    .ach-edit-card {
-        max-width: 760px;
-        margin: 0 auto;
-        border-radius: 16px;
-        border: 0;
-        box-shadow: 0 12px 30px rgba(0,0,0,0.06);
-    }
-    .ach-edit-card .card-header {
-        padding: 16px 20px 10px;
-        border-bottom: none;
-        background: #ffffff;
-    }
-    .ach-edit-title {
-        margin: 0;
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: #111827;
-    }
-    .ach-edit-card .card-body {
-        padding: 12px 20px 16px;
-    }
-</style>
+{% load static %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/teacher_achievement_pages.css' %}">
+{% endblock %}
+
+{% block content %}
 <div class="card ach-edit-card">
     <div class="card-header">
         <h3 class="ach-edit-title">Редактирование достижения</h3>

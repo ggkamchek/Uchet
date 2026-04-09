@@ -1,35 +1,11 @@
 {% extends 'main/teacher/teacher_base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/teacher_achievement_pages.css' %}">
+{% endblock %}
 
 {% block content %}
-<style>
-    .ach-delete-card {
-        max-width: 560px;
-        margin: 0 auto;
-        border-radius: 16px;
-        border: 0;
-        box-shadow: 0 12px 30px rgba(0,0,0,0.06);
-    }
-    .ach-delete-card .card-header {
-        padding: 16px 20px 10px;
-        border-bottom: none;
-        background: #fef2f2;
-    }
-    .ach-delete-title {
-        margin: 0;
-        font-size: 1.15rem;
-        font-weight: 600;
-        color: #b91c1c;
-    }
-    .ach-delete-card .card-body {
-        padding: 12px 20px 16px;
-    }
-    .ach-delete-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 8px;
-    }
-</style>
-
 <div class="card ach-delete-card">
     <div class="card-header">
         <h3 class="ach-delete-title">Подтверждение удаления</h3>

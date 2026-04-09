@@ -1,0 +1,186 @@
+.ach-card {
+    border: 0;
+    border-radius: 16px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+    background: #fff;
+    transform: scale(1.06);
+    transform-origin: top center;
+}
+.ach-card-header {
+    padding: 18px 20px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.ach-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #111827;
+}
+.ach-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #00ff0d;
+}
+.ach-table-wrap {
+    padding: 0 8px 8px;
+    overflow: visible;
+}
+.ach-dt-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+.ach-dt-wrapper .dataTables_scrollBody {
+    overflow: visible !important;
+}
+#teacherAchievementsTable {
+    width: 100%;
+}
+.ach-table {
+    margin: 0;
+    table-layout: auto;
+}
+.ach-table th:last-child,
+.ach-table td:last-child {
+    width: 1%;
+    white-space: nowrap;
+}
+.ach-th-col {
+    min-width: 160px;
+}
+.ach-th-col--narrow {
+    min-width: 140px;
+}
+.ach-th-col--calc {
+    min-width: 130px;
+}
+.ach-th-col--score {
+    min-width: 110px;
+}
+.ach-table thead th {
+    border-bottom: 0;
+    color: #6b7280;
+    font-weight: 600;
+    font-size: 1rem;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    background: transparent;
+}
+.ach-th-icon {
+    display: block;
+    color: #9ca3af;
+    font-size: 0.85rem;
+    margin-bottom: 2px;
+    line-height: 1;
+}
+.ach-th-text {
+    display: block;
+}
+.ach-status-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 700;
+    border: 1px solid transparent;
+    text-decoration: none;
+    user-select: none;
+}
+.ach-status-edit {
+    color: #0f766e;
+    background: #ecfeff;
+    border-color: #0f766e;
+}
+.ach-status-del {
+    color: #dc2626;
+    background: #fef2f2;
+    border-color: #dc2626;
+}
+.ach-dt-wrapper .dataTables_wrapper .dataTables_paginate {
+    margin-top: 16px;
+    padding-bottom: 8px;
+    display: flex;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.ach-dt-wrapper .dataTables_wrapper .dataTables_paginate ul.pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.ach-dt-wrapper .dataTables_wrapper .page-item {
+    margin: 0;
+}
+.ach-dt-wrapper .dataTables_wrapper .page-item .page-link {
+    position: relative;
+    z-index: 0;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    min-width: 38px;
+    height: 38px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    color: #374151;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.25;
+    box-shadow: none;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.ach-dt-wrapper .dataTables_wrapper .page-item.previous .page-link,
+.ach-dt-wrapper .dataTables_wrapper .page-item.next .page-link {
+    min-width: auto;
+    padding-left: 16px;
+    padding-right: 16px;
+}
+.ach-dt-wrapper .dataTables_wrapper .page-item .page-link:hover {
+    background-color: #f3f4f6;
+    border-color: #d1d5db;
+    color: #111827;
+}
+.ach-dt-wrapper .dataTables_wrapper .page-item.active .page-link {
+    z-index: 1;
+    background-color: #111827;
+    border-color: #111827;
+    color: #ffffff;
+}
+.ach-dt-wrapper .dataTables_wrapper .page-item.active .page-link:hover {
+    background-color: #030712;
+    border-color: #030712;
+    color: #ffffff;
+}
+.ach-dt-wrapper .dataTables_wrapper .page-item.disabled .page-link {
+    background-color: #f9fafb;
+    border-color: #e5e7eb;
+    color: #9ca3af;
+    pointer-events: none;
+}
+.ach-dt-wrapper .dataTables_wrapper .page-item.disabled .page-link:hover {
+    background-color: #f9fafb;
+    border-color: #e5e7eb;
+    color: #9ca3af;
+}
+.ach-dt-wrapper .dataTables_wrapper .page-item .page-link:focus {
+    outline: none;
+    box-shadow: none;
+}
+.ach-dt-wrapper .dataTables_wrapper .page-item .page-link:focus-visible {
+    outline: 2px solid #4f46e5;
+    outline-offset: 2px;
+    z-index: 2;
+}
